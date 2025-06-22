@@ -20,7 +20,7 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
     analyzeLlmsTxt(url),
     analyzeStructuredData($ as any),
     analyzeContent($ as any),
-    analyzeEeat($ as any)
+    analyzeEeat($ as any, url)
   ]);
   
   // スコアを計算

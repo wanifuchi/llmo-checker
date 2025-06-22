@@ -1,12 +1,12 @@
 import * as cheerio from 'cheerio';
 import { EeatAnalysis } from '@/lib/types';
 
-export function analyzeEeat($: cheerio.CheerioAPI): EeatAnalysis {
+export function analyzeEeat($: cheerio.CheerioAPI, url?: string): EeatAnalysis {
   return {
     authorInfo: analyzeAuthorInfo($),
     organizationInfo: analyzeOrganizationInfo($),
     lastUpdated: extractLastUpdated($),
-    trustSignals: findTrustSignals($)
+    trustSignals: findTrustSignals($, url)
   };
 }
 
@@ -107,12 +107,12 @@ function extractLastUpdated($: cheerio.CheerioAPI): string | null {
   return null;
 }
 
-function findTrustSignals($: cheerio.CheerioAPI): string[] {
+function findTrustSignals($: cheerio.CheerioAPI, url?: string): string[] {
   const signals: string[] = [];
   const text = $('body').text().toLowerCase();
   
-  // SSL証明書の確認（httpsから推測）
-  if (window.location?.protocol === 'https:') {
+  // SSL証明書の確認（URLから判定）
+  if (url && url.startsWith('https://')) {
     signals.push('SSL証明書');
   }
   
