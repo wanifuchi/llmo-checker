@@ -17,7 +17,7 @@
     "@radix-ui/react-progress": "^1.1.7",
     "@radix-ui/react-slot": "^1.2.3",
     "@radix-ui/react-tabs": "^1.1.12",
-    "@sparticuz/chromium": "^137.0.1",
+    "@sparticuz/chromium-min": "^137.0.1",
     "@tailwindcss/postcss": "^4.0.0-alpha.33",
     "cheerio": "^1.1.0",
     "class-variance-authority": "^0.7.1",

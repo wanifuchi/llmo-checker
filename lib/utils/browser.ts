@@ -1,15 +1,30 @@
-import chromium from '@sparticuz/chromium';
+import chromium from '@sparticuz/chromium-min';
 import puppeteerCore from 'puppeteer-core';
 
 // 開発環境かどうかを判定
 const isDev = process.env.NODE_ENV === 'development';
 
 export async function getBrowser() {
-  // 本番環境（Vercel）では@sparticuz/chromiumを使用
+  // 本番環境（Vercel）では@sparticuz/chromium-minを使用
+  
+  let executablePath;
+  let args = [];
+  
+  if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL) {
+    // AWS Lambda/Vercel環境
+    executablePath = await chromium.executablePath(
+      'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
+    );
+    args = [...chromium.args];
+  } else {
+    // ローカル環境では事前インストールされたChromiumを使用
+    executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+    args = ['--no-sandbox', '--disable-setuid-sandbox'];
+  }
   
   const browser = await puppeteerCore.launch({
     args: [
-      ...chromium.args,
+      ...args,
       '--no-sandbox',
       '--disable-setuid-sandbox',
       '--disable-gpu',
@@ -20,7 +35,7 @@ export async function getBrowser() {
       '--font-render-hinting=none'
     ],
     defaultViewport: { width: 1280, height: 720 },
-    executablePath: await chromium.executablePath(),
+    executablePath,
     headless: true
   });
   
