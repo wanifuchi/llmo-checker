@@ -25,13 +25,23 @@ export async function POST(request: NextRequest) {
 
     // URLを解析
     let result;
+    let isUsingFallback = false;
     try {
+      console.log(`解析開始: ${url}`);
       // 実際の解析を試みる
       result = await analyzeUrl(url);
+      console.log(`解析成功: ${url}`);
     } catch (analysisError) {
       console.error('実解析エラー、サンプルデータで代替:', analysisError);
+      console.error('エラー詳細:', analysisError instanceof Error ? analysisError.stack : analysisError);
+      isUsingFallback = true;
       // 解析に失敗した場合はサンプルデータで代替
       result = generateSampleData(url);
+      
+      // フロントエンドにフォールバック使用を通知
+      result.isFallbackData = true;
+      result.fallbackReason = analysisError instanceof Error ? analysisError.message : '不明なエラー';
+      result.originalUrl = url;
     }
     
     return NextResponse.json(result);

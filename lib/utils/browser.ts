@@ -31,8 +31,12 @@ export async function fetchHtmlWithBrowser(url: string): Promise<string> {
   let browser: any = null;
   
   try {
+    console.log('ブラウザ起動開始...');
     browser = await getBrowser();
+    console.log('ブラウザ起動成功');
+    
     const page = await browser.newPage();
+    console.log('新しいページ作成成功');
     
     // ナビゲーションタイムアウトを30秒に設定（Vercelの制限を考慮）
     page.setDefaultNavigationTimeout(30000);
@@ -50,13 +54,16 @@ export async function fetchHtmlWithBrowser(url: string): Promise<string> {
     });
     
     // ページにアクセス
+    console.log(`URL ${url} にアクセス開始...`);
     await page.goto(url, {
       waitUntil: 'networkidle2',
       timeout: 30000
     });
+    console.log('ページ読み込み完了');
     
     // JavaScriptレンダリング後のHTMLを取得
     const html = await page.content();
+    console.log(`HTML取得完了: ${html.length} 文字`);
     
     await page.close();
     

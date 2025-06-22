@@ -111,6 +111,11 @@ export default function Home() {
                   <p className="text-muted-foreground">
                     AI時代に向けた包括的なウェブサイト最適化分析
                   </p>
+                  {(results as any).isFallbackData && (
+                    <div className="mt-2 p-2 bg-yellow-50 border border-yellow-200 rounded text-sm text-yellow-800">
+                      ⚠️ サンプルデータを表示中（実解析エラー: {(results as any).fallbackReason}）
+                    </div>
+                  )}
                 </div>
                 <div className="flex flex-col space-y-2">
                   <Badge variant="outline" className="flex items-center space-x-2 px-3 py-1">
