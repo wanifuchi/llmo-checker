@@ -1,29 +1,13 @@
 import chromium from '@sparticuz/chromium';
-import puppeteer from 'puppeteer-core';
-import type { Browser } from 'puppeteer-core';
+import puppeteerCore from 'puppeteer-core';
 
 // 開発環境かどうかを判定
 const isDev = process.env.NODE_ENV === 'development';
 
-export async function getBrowser(): Promise<Browser> {
-  if (isDev) {
-    // 開発環境では通常のpuppeteerを使用
-    try {
-      const devPuppeteer = await import('puppeteer');
-      return await devPuppeteer.default.launch({
-        headless: true,
-        args: ['--no-sandbox', '--disable-setuid-sandbox']
-      });
-    } catch (error) {
-      console.warn('開発環境でpuppeteerが見つかりません。puppeteer-coreを使用します。');
-    }
-  }
-
+export async function getBrowser() {
   // 本番環境（Vercel）では@sparticuz/chromiumを使用
-  // パフォーマンス最適化のため、WebGLを無効化
-  chromium.setGraphicsMode = false;
   
-  const browser = await puppeteer.launch({
+  const browser = await puppeteerCore.launch({
     args: [
       ...chromium.args,
       '--no-sandbox',
@@ -35,17 +19,16 @@ export async function getBrowser(): Promise<Browser> {
       '--disable-background-timer-throttling',
       '--font-render-hinting=none'
     ],
-    defaultViewport: chromium.defaultViewport,
+    defaultViewport: { width: 1280, height: 720 },
     executablePath: await chromium.executablePath(),
-    headless: chromium.headless,
-    ignoreHTTPSErrors: true
+    headless: true
   });
   
   return browser;
 }
 
 export async function fetchHtmlWithBrowser(url: string): Promise<string> {
-  let browser: Browser | null = null;
+  let browser: any = null;
   
   try {
     browser = await getBrowser();
@@ -56,7 +39,7 @@ export async function fetchHtmlWithBrowser(url: string): Promise<string> {
     
     // 不要なリソースをブロックしてパフォーマンスを向上
     await page.setRequestInterception(true);
-    page.on('request', (request) => {
+    page.on('request', (request: any) => {
       const resourceType = request.resourceType();
       // 画像、フォント、メディアなどをブロック
       if (['image', 'font', 'media', 'websocket'].includes(resourceType)) {
