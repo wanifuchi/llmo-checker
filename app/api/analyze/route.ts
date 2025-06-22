@@ -39,9 +39,9 @@ export async function POST(request: NextRequest) {
       result = generateSampleData(url);
       
       // フロントエンドにフォールバック使用を通知
-      result.isFallbackData = true;
-      result.fallbackReason = analysisError instanceof Error ? analysisError.message : '不明なエラー';
-      result.originalUrl = url;
+      (result as any).isFallbackData = true;
+      (result as any).fallbackReason = analysisError instanceof Error ? analysisError.message : '不明なエラー';
+      (result as any).originalUrl = url;
     }
     
     return NextResponse.json(result);
