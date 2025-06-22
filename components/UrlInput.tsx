@@ -1,7 +1,10 @@
 'use client';
 
 import { useState } from 'react';
-import { Globe } from 'lucide-react';
+import { Globe, Zap, ArrowRight } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { Card, CardContent } from '@/components/ui/card';
+import { cn } from '@/lib/utils/cn';
 
 interface UrlInputProps {
   onAnalyze: (url: string) => void;
@@ -9,77 +12,4 @@ interface UrlInputProps {
 }
 
 export default function UrlInput({ onAnalyze, isAnalyzing = false }: UrlInputProps) {
-  const [url, setUrl] = useState('');
-  const [error, setError] = useState('');
-
-  const validateUrl = (url: string): boolean => {
-    try {
-      const urlObj = new URL(url);
-      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';
-    } catch {
-      return false;
-    }
-  };
-
-  const handleSubmit = (e: React.FormEvent) => {
-    e.preventDefault();
-    setError('');
-
-    if (!url.trim()) {
-      setError('URLを入力してください');
-      return;
-    }
-
-    if (!validateUrl(url)) {
-      setError('正しいURL形式で入力してください');
-      return;
-    }
-
-    onAnalyze(url);
-  };
-
-  return (
-    <div className="bg-gray-50 py-12">
-      <div className="max-w-3xl mx-auto px-4 sm:px-6 lg:px-8">
-        <div className="text-center mb-8">
-          <h2 className="text-3xl font-bold text-gray-900 mb-2">
-            ウェブサイトのLLMO最適化状況をチェック
-          </h2>
-          <p className="text-lg text-gray-600">
-            URLを入力して、AIクローラーへの最適化状況を分析しましょう
-          </p>
-        </div>
-
-        <form onSubmit={handleSubmit} className="space-y-4">
-          <div className="flex space-x-2">
-            <div className="flex-1 relative">
-              <Globe className="absolute left-3 top-1/2 transform -translate-y-1/2 h-5 w-5 text-gray-400" />
-              <input
-                type="text"
-                value={url}
-                onChange={(e) => setUrl(e.target.value)}
-                placeholder="https://example.com"
-                className="w-full pl-10 pr-3 py-3 border border-gray-300 rounded-lg focus:outline-none focus:ring-2 focus:ring-blue-500 focus:border-transparent"
-                disabled={isAnalyzing}
-              />
-            </div>
-            <button
-              type="submit"
-              disabled={isAnalyzing}
-              className="px-6 py-3 bg-blue-600 text-white font-medium rounded-lg hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 disabled:cursor-not-allowed transition-colors"
-            >
-              {isAnalyzing ? '解析中...' : '解析開始'}
-            </button>
-          </div>
-          {error && (
-            <p className="text-red-600 text-sm mt-2">{error}</p>
-          )}
-        </form>
-
-        <div className="mt-6 text-center text-sm text-gray-500">
-          例：https://example.com、https://www.company.jp
-        </div>
-      </div>
-    </div>
-  );
-}
+  const [url, setUrl] = useState('');\n  const [error, setError] = useState('');\n  const [isFocused, setIsFocused] = useState(false);\n\n  const validateUrl = (url: string): boolean => {\n    try {\n      const urlObj = new URL(url);\n      return urlObj.protocol === 'http:' || urlObj.protocol === 'https:';\n    } catch {\n      return false;\n    }\n  };\n\n  const handleSubmit = (e: React.FormEvent) => {\n    e.preventDefault();\n    setError('');\n\n    if (!url.trim()) {\n      setError('URLを入力してください');\n      return;\n    }\n\n    if (!validateUrl(url)) {\n      setError('正しいURL形式で入力してください');\n      return;\n    }\n\n    onAnalyze(url);\n  };\n\n  const exampleSites = [\n    { name: \"企業サイト\", url: \"https://company.example.com\" },\n    { name: \"ブログ\", url: \"https://blog.example.com\" },\n    { name: \"ECサイト\", url: \"https://shop.example.com\" }\n  ];\n\n  return (\n    <div className=\"relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 py-24\">\n      {/* Background decoration */}\n      <div className=\"absolute inset-0 bg-grid-slate-100 [mask-image:linear-gradient(0deg,white,rgba(255,255,255,0.6))] dark:bg-grid-slate-700/25 dark:[mask-image:linear-gradient(0deg,rgba(255,255,255,0.1),rgba(255,255,255,0.5))]\"></div>\n      \n      <div className=\"container relative mx-auto px-4\">\n        <div className=\"mx-auto max-w-4xl text-center\">\n          {/* Hero Section */}\n          <div className=\"mb-12 animate-fade-in\">\n            <div className=\"mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 shadow-2xl\">\n              <Zap className=\"h-10 w-10 text-white\" />\n            </div>\n            <h1 className=\"mb-4 text-4xl font-bold tracking-tight text-foreground md:text-6xl\">\n              AI時代の\n              <span className=\"gradient-text\"> ウェブ最適化</span>\n            </h1>\n            <p className=\"mx-auto max-w-2xl text-lg text-muted-foreground md:text-xl\">\n              大規模言語モデルによるクロールとインデックスを想定した\n              <br className=\"hidden md:block\" />\n              次世代ウェブサイト最適化を、いま。\n            </p>\n          </div>\n\n          {/* Input Section */}\n          <Card className=\"mx-auto max-w-2xl bg-white/80 backdrop-blur-xl border-white/20 shadow-2xl floating-card\">\n            <CardContent className=\"p-8\">\n              <form onSubmit={handleSubmit} className=\"space-y-6\">\n                <div className=\"space-y-2\">\n                  <label className=\"text-sm font-medium text-foreground\">\n                    解析対象URL\n                  </label>\n                  <div className={cn(\n                    \"relative transition-all duration-200\",\n                    isFocused && \"scale-[1.02]\"\n                  )}>\n                    <Globe className=\"absolute left-4 top-1/2 h-5 w-5 -translate-y-1/2 text-muted-foreground transition-colors\" />\n                    <input\n                      type=\"text\"\n                      value={url}\n                      onChange={(e) => setUrl(e.target.value)}\n                      onFocus={() => setIsFocused(true)}\n                      onBlur={() => setIsFocused(false)}\n                      placeholder=\"https://your-website.com\"\n                      className={cn(\n                        \"w-full rounded-lg border bg-background pl-12 pr-4 py-4 text-sm transition-all duration-200 focus:outline-none focus:ring-2 focus:ring-primary focus:border-transparent disabled:opacity-50\",\n                        error && \"border-destructive focus:ring-destructive\"\n                      )}\n                      disabled={isAnalyzing}\n                    />\n                  </div>\n                  {error && (\n                    <p className=\"text-sm text-destructive animate-slide-up\">\n                      {error}\n                    </p>\n                  )}\n                </div>\n\n                <Button\n                  type=\"submit\"\n                  disabled={isAnalyzing}\n                  size=\"lg\"\n                  className=\"w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]\"\n                >\n                  {isAnalyzing ? (\n                    <>\n                      <div className=\"mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent\"></div>\n                      AI解析実行中...\n                    </>\n                  ) : (\n                    <>\n                      今すぐ解析開始\n                      <ArrowRight className=\"ml-2 h-4 w-4\" />\n                    </>\n                  )}\n                </Button>\n              </form>\n\n              {/* Example URLs */}\n              <div className=\"mt-8 space-y-3\">\n                <p className=\"text-sm font-medium text-muted-foreground\">\n                  サンプルサイトで試す\n                </p>\n                <div className=\"flex flex-wrap gap-2\">\n                  {exampleSites.map((site, index) => (\n                    <button\n                      key={index}\n                      onClick={() => setUrl(site.url)}\n                      className=\"rounded-full bg-secondary px-3 py-1 text-xs font-medium text-secondary-foreground transition-colors hover:bg-secondary/80\"\n                      disabled={isAnalyzing}\n                    >\n                      {site.name}\n                    </button>\n                  ))}\n                </div>\n              </div>\n            </CardContent>\n          </Card>\n\n          {/* Features Preview */}\n          <div className=\"mt-16 grid gap-6 md:grid-cols-3 animate-slide-up\">\n            {[\n              { icon: \"🔍\", title: \"llms.txt解析\", desc: \"AI向けrobots.txt仕様の実装状況\" },\n              { icon: \"📊\", title: \"構造化データ\", desc: \"JSON-LDとSchema.orgの最適化度\" },\n              { icon: \"🏆\", title: \"E-E-A-T評価\", desc: \"専門性・権威性・信頼性の総合評価\" }\n            ].map((feature, index) => (\n              <Card key={index} className=\"border-white/20 bg-white/60 backdrop-blur-sm\">\n                <CardContent className=\"p-6 text-center\">\n                  <div className=\"text-2xl mb-2\">{feature.icon}</div>\n                  <h3 className=\"font-semibold text-foreground mb-1\">{feature.title}</h3>\n                  <p className=\"text-sm text-muted-foreground\">{feature.desc}</p>\n                </CardContent>\n              </Card>\n            ))}\n          </div>\n        </div>\n      </div>\n    </div>\n  );\n}
