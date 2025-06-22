@@ -23,20 +23,15 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // URLを解析（Vercel環境では常にサンプルデータを使用）
+    // URLを解析
     let result;
-    if (process.env.VERCEL || process.env.NODE_ENV === 'development' || url.includes('example.com')) {
-      // Vercel環境、開発環境、またはexample.comの場合はサンプルデータを返す
+    try {
+      // 実際の解析を試みる
+      result = await analyzeUrl(url);
+    } catch (analysisError) {
+      console.error('実解析エラー、サンプルデータで代替:', analysisError);
+      // 解析に失敗した場合はサンプルデータで代替
       result = generateSampleData(url);
-    } else {
-      try {
-        // ローカル環境でのみ実際の解析を実行
-        result = await analyzeUrl(url);
-      } catch (analysisError) {
-        console.error('実解析エラー、サンプルデータで代替:', analysisError);
-        // 解析に失敗した場合はサンプルデータで代替
-        result = generateSampleData(url);
-      }
     }
     
     return NextResponse.json(result);

@@ -6,12 +6,13 @@ import { analyzeContent } from './content-analyzer';
 import { analyzeEeat } from './eeat-analyzer';
 import { calculateScores } from './score-calculator';
 import { generateSuggestions } from './suggestion-generator';
+import { fetchHtmlWithBrowser } from '@/lib/utils/browser';
 
 export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   console.log(`LLMO解析開始: ${url}`);
   
-  // HTMLを取得
-  const html = await fetchHtml(url);
+  // ブラウザを使用してHTMLを取得（JavaScriptレンダリング対応）
+  const html = await fetchHtmlWithBrowser(url);
   const $ = cheerio.load(html);
   
   // 並列で各解析を実行
@@ -42,16 +43,4 @@ export async function analyzeUrl(url: string): Promise<AnalysisResult> {
   };
 }
 
-async function fetchHtml(url: string): Promise<string> {
-  const response = await fetch(url, {
-    headers: {
-      'User-Agent': 'Mozilla/5.0 (compatible; LLMO-Checker/1.0)'
-    }
-  });
-  
-  if (!response.ok) {
-    throw new Error(`HTTPエラー: ${response.status}`);
-  }
-  
-  return await response.text();
-}
+// 旧fetchHtml関数は削除（fetchHtmlWithBrowserを使用）
