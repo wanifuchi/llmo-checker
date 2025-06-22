@@ -23,14 +23,14 @@ export async function POST(request: NextRequest) {
       );
     }
 
-    // URLを解析（実装版と仮データ版の切り替え）
+    // URLを解析（Vercel環境では常にサンプルデータを使用）
     let result;
-    if (process.env.NODE_ENV === 'development' || url.includes('example.com')) {
-      // 開発環境またはexample.comの場合はサンプルデータを返す
+    if (process.env.VERCEL || process.env.NODE_ENV === 'development' || url.includes('example.com')) {
+      // Vercel環境、開発環境、またはexample.comの場合はサンプルデータを返す
       result = generateSampleData(url);
     } else {
       try {
-        // 本番環境では実際の解析を実行
+        // ローカル環境でのみ実際の解析を実行
         result = await analyzeUrl(url);
       } catch (analysisError) {
         console.error('実解析エラー、サンプルデータで代替:', analysisError);
