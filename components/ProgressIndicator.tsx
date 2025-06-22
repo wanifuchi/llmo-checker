@@ -102,4 +102,20 @@ export default function ProgressIndicator({ progress }: ProgressIndicatorProps) 
                 return (
                   <div
                     key={stage}
-                    className={`h-2 w-2 rounded-full transition-all duration-300 ${\n                      isActive\n                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 scale-150'\n                        : isCompleted\n                        ? 'bg-green-500'\n                        : 'bg-secondary'\n                    }`}\n                  />\n                );\n              })}\n            </div>\n          </div>\n        </CardContent>\n      </Card>\n    </div>\n  );\n}
+                    className={`h-2 w-2 rounded-full transition-all duration-300 ${
+                      isActive
+                        ? 'bg-gradient-to-r from-blue-500 to-purple-600 scale-150'
+                        : isCompleted
+                        ? 'bg-green-500'
+                        : 'bg-secondary'
+                    }`}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        </CardContent>
+      </Card>
+    </div>
+  );
+}
