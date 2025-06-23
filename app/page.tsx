@@ -138,6 +138,11 @@ export default function Home() {
 
       const data = await response.json();
       setCompetitiveAnalysis(data.analysis);
+      
+      // 競合分析完了後、競合比較タブに自動切り替え
+      setTimeout(() => {
+        setActiveTab('competitive');
+      }, 500);
 
     } catch (err) {
       console.error('競合分析エラー:', err);
@@ -294,7 +299,10 @@ export default function Home() {
       {/* Competitive Analysis Results */}
       {competitiveAnalysis && activeTab === 'competitive' && (
         <div className="container mx-auto px-4 py-12">
-          <CompetitiveAnalysisComponent analysis={competitiveAnalysis} />
+          <CompetitiveAnalysisComponent 
+            analysis={competitiveAnalysis} 
+            targetAnalysis={results}
+          />
         </div>
       )}
       
