@@ -28,7 +28,41 @@ export async function analyzeLlmsTxt(url: string): Promise<LlmsTxtAnalysis> {
       };
     }
     
+    // Content-Typeをチェック（HTMLページが返された場合を除外）
+    const contentType = response.headers.get('content-type') || '';
+    if (contentType.includes('text/html')) {
+      return {
+        exists: false,
+        syntax: {
+          valid: false,
+          errors: ['llms.txtではなくHTMLページが返されました']
+        },
+        content: {
+          allowed: [],
+          disallowed: [],
+          sitemaps: []
+        }
+      };
+    }
+    
     const content = await response.text();
+    
+    // HTMLっぽい内容をチェック
+    if (content.includes('<!DOCTYPE html>') || content.includes('<html')) {
+      return {
+        exists: false,
+        syntax: {
+          valid: false,
+          errors: ['llms.txtファイルが存在しません（HTMLページが返されました）']
+        },
+        content: {
+          allowed: [],
+          disallowed: [],
+          sitemaps: []
+        }
+      };
+    }
+    
     return parseLlmsTxt(content);
     
   } catch (error) {
