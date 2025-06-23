@@ -87,6 +87,11 @@ export interface Suggestion {
   description: string;
   implementation: string;
   codeExample?: string;
+  roi?: {
+    effort: number;
+    impact: number;
+    score: number;
+  };
 }
 
 // 解析進捗
@@ -94,4 +99,79 @@ export interface AnalysisProgress {
   stage: 'fetching' | 'parsing' | 'analyzing' | 'generating';
   percentage: number;
   currentTask: string;
+}
+
+// 競合比較・ベンチマーク機能
+export interface CompetitiveAnalysis {
+  targetUrl: string;
+  competitors: CompetitorSite[];
+  ranking: {
+    position: number;
+    outOf: number;
+    category: string;
+    industry?: string;
+  };
+  gapAnalysis: CompetitorGap[];
+  benchmarks: IndustryBenchmarks;
+  recommendations: CompetitiveRecommendation[];
+}
+
+export interface CompetitorSite {
+  url: string;
+  name: string;
+  analysis: AnalysisResult;
+  marketPosition: 'leader' | 'challenger' | 'follower';
+  strengths: string[];
+  weaknesses: string[];
+}
+
+export interface CompetitorGap {
+  area: 'technical' | 'content' | 'structuredData' | 'eeat';
+  currentScore: number;
+  competitorAverage: number;
+  topCompetitorScore: number;
+  gap: number;
+  impact: 'high' | 'medium' | 'low';
+  effort: 'low' | 'medium' | 'high';
+}
+
+export interface IndustryBenchmarks {
+  industry: string;
+  averageScores: {
+    overall: number;
+    technical: number;
+    structuredData: number;
+    content: number;
+    eeat: number;
+  };
+  topPerformerScores: {
+    overall: number;
+    technical: number;
+    structuredData: number;
+    content: number;
+    eeat: number;
+  };
+  commonFeatures: string[];
+  emergingTrends: string[];
+}
+
+export interface CompetitiveRecommendation {
+  id: string;
+  priority: 'critical' | 'high' | 'medium' | 'low';
+  type: 'quick-win' | 'strategic' | 'long-term';
+  title: string;
+  description: string;
+  competitorExample: string;
+  expectedImpact: {
+    scoreImprovement: number;
+    rankingImprovement: number;
+    timeToImplement: string;
+  };
+  implementation: string;
+  codeExample?: string;
+  roi: {
+    effort: number; // 1-10 scale
+    impact: number; // 1-10 scale
+    score: number; // impact/effort ratio
+  };
 }

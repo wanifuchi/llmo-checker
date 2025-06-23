@@ -13,10 +13,12 @@ import BatchAnalysis from '@/components/BatchAnalysis';
 import CacheInfo from '@/components/CacheInfo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
-import { AnalysisResult, AnalysisProgress } from '@/lib/types';
-import { Calendar, Globe, AlertCircle } from 'lucide-react';
+import { AnalysisResult, AnalysisProgress, CompetitiveAnalysis } from '@/lib/types';
+import { Calendar, Globe, AlertCircle, Users } from 'lucide-react';
 import { addToHistory, HistoryItem } from '@/lib/utils/history';
 import { getCachedAnalysis, setCachedAnalysis, isCached, getCacheTimeRemainingFormatted } from '@/lib/utils/cache';
+import CompetitorInput from '@/components/CompetitorInput';
+import CompetitiveAnalysisComponent from '@/components/CompetitiveAnalysis';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -24,7 +26,10 @@ export default function Home() {
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
   const [selectedUrl, setSelectedUrl] = useState<string>('');
-  const [activeTab, setActiveTab] = useState<'single' | 'batch'>('single');
+  const [activeTab, setActiveTab] = useState<'single' | 'batch' | 'competitive'>('single');
+  const [competitiveAnalysis, setCompetitiveAnalysis] = useState<CompetitiveAnalysis | null>(null);
+  const [competitorUrls, setCompetitorUrls] = useState<string[]>([]);
+  const [isCompetitiveAnalyzing, setIsCompetitiveAnalyzing] = useState(false);
 
   const handleAnalyze = async (url: string, forceRefresh: boolean = false) => {
     setIsAnalyzing(true);
@@ -103,6 +108,45 @@ export default function Home() {
     }
   };
 
+  const handleCompetitiveAnalysis = async () => {
+    if (!results || competitorUrls.length === 0) {
+      setError('競合分析を実行するには、まずメイン解析を実行し、競合URLを設定してください。');
+      return;
+    }
+
+    setIsCompetitiveAnalyzing(true);
+    setError(null);
+    setCompetitiveAnalysis(null);
+
+    try {
+      const response = await fetch('/api/competitive-analysis', {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+        },
+        body: JSON.stringify({
+          targetUrl: results.url,
+          targetAnalysis: results,
+          competitorUrls
+        }),
+      });
+
+      if (!response.ok) {
+        const errorData = await response.json();
+        throw new Error(errorData.error || '競合分析に失敗しました');
+      }
+
+      const data = await response.json();
+      setCompetitiveAnalysis(data.analysis);
+
+    } catch (err) {
+      console.error('競合分析エラー:', err);
+      setError(err instanceof Error ? err.message : '競合分析の処理中にエラーが発生しました');
+    } finally {
+      setIsCompetitiveAnalyzing(false);
+    }
+  };
+
   return (
     <div className="min-h-screen bg-gradient-to-br from-slate-50 via-white to-blue-50">
       <Header />
@@ -114,7 +158,7 @@ export default function Home() {
           isAnalyzing={isAnalyzing} 
           initialUrl={selectedUrl}
         />
-      ) : (
+      ) : activeTab === 'batch' ? (
         <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 py-24">
           <div className="container relative mx-auto px-4">
             <div className="mx-auto max-w-4xl">
@@ -136,6 +180,52 @@ export default function Home() {
                 // 一括解析の結果を履歴に保存
                 results.forEach(result => addToHistory(result));
               }} />
+            </div>
+          </div>
+        </div>
+      ) : (
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-orange-50 to-red-50 py-24">
+          <div className="container relative mx-auto px-4">
+            <div className="mx-auto max-w-4xl">
+              <div className="mb-12 text-center animate-fade-in">
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-orange-500 to-red-600 shadow-2xl">
+                  <Users className="h-10 w-10 text-white" />
+                </div>
+                <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+                  競合比較で
+                  <span className="gradient-text"> 優位性発見</span>
+                </h1>
+                <p className="mx-auto max-w-2xl text-lg text-muted-foreground md:text-xl">
+                  競合サイトとの比較分析で、
+                  <br className="hidden md:block" />
+                  改善ポイントを明確化します。
+                </p>
+              </div>
+              {results ? (
+                <div className="space-y-6">
+                  <CompetitorInput 
+                    onCompetitorsChange={setCompetitorUrls}
+                    targetUrl={results.url}
+                    industry="other"
+                  />
+                  {competitorUrls.length > 0 && (
+                    <div className="text-center">
+                      <button
+                        onClick={handleCompetitiveAnalysis}
+                        disabled={isCompetitiveAnalyzing}
+                        className="px-8 py-3 bg-gradient-to-r from-orange-500 to-red-600 text-white rounded-lg font-medium hover:from-orange-600 hover:to-red-700 disabled:opacity-50 disabled:cursor-not-allowed transition-all"
+                      >
+                        {isCompetitiveAnalyzing ? '競合分析中...' : '競合分析を実行'}
+                      </button>
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="text-center p-8 bg-yellow-50 rounded-lg border border-yellow-200">
+                  <div className="text-yellow-600 mb-2">⚠️</div>
+                  <p className="text-yellow-800 font-medium">競合分析を実行するには、まず「単発解析」タブでメイン解析を実行してください。</p>
+                </div>
+              )}
             </div>
           </div>
         </div>
@@ -165,6 +255,16 @@ export default function Home() {
             >
               一括解析
             </button>
+            <button
+              onClick={() => setActiveTab('competitive')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === 'competitive'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              競合比較
+            </button>
           </div>
         </div>
       </div>
@@ -191,8 +291,15 @@ export default function Home() {
         </div>
       )}
       
+      {/* Competitive Analysis Results */}
+      {competitiveAnalysis && activeTab === 'competitive' && (
+        <div className="container mx-auto px-4 py-12">
+          <CompetitiveAnalysisComponent analysis={competitiveAnalysis} />
+        </div>
+      )}
+      
       {/* Results Section */}
-      {results && (
+      {results && activeTab === 'single' && (
         <div className="container mx-auto px-4 py-12 space-y-12">
           {/* Analysis Header */}
           <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl">
