@@ -1,20 +1,45 @@
 'use client';
 
-import { useState } from 'react';
-import { Globe, Zap, ArrowRight } from 'lucide-react';
+import { useState, useEffect } from 'react';
+import { Globe, Zap, ArrowRight, Clock, RefreshCw } from 'lucide-react';
+import { isCached, getCacheTimeRemainingFormatted } from '@/lib/utils/cache';
 import { Button } from '@/components/ui/button';
 import { Card, CardContent } from '@/components/ui/card';
 import { cn } from '@/lib/utils/cn';
 
 interface UrlInputProps {
-  onAnalyze: (url: string) => void;
+  onAnalyze: (url: string, forceRefresh?: boolean) => void;
   isAnalyzing?: boolean;
+  initialUrl?: string;
 }
 
-export default function UrlInput({ onAnalyze, isAnalyzing = false }: UrlInputProps) {
-  const [url, setUrl] = useState('');
+export default function UrlInput({ onAnalyze, isAnalyzing = false, initialUrl = '' }: UrlInputProps) {
+  const [url, setUrl] = useState(initialUrl);
   const [error, setError] = useState('');
   const [isFocused, setIsFocused] = useState(false);
+  const [hasCachedData, setHasCachedData] = useState(false);
+  const [cacheTimeRemaining, setCacheTimeRemaining] = useState('');
+  
+  // initialUrlが変更されたときに入力欄を更新
+  useEffect(() => {
+    if (initialUrl) {
+      setUrl(initialUrl);
+    }
+  }, [initialUrl]);
+  
+  // URLが変更されたときにキャッシュ状態をチェック
+  useEffect(() => {
+    if (url && validateUrl(url)) {
+      const cached = isCached(url);
+      setHasCachedData(cached);
+      if (cached) {
+        setCacheTimeRemaining(getCacheTimeRemainingFormatted(url));
+      }
+    } else {
+      setHasCachedData(false);
+      setCacheTimeRemaining('');
+    }
+  }, [url]);
 
   const validateUrl = (url: string): boolean => {
     try {
@@ -39,7 +64,7 @@ export default function UrlInput({ onAnalyze, isAnalyzing = false }: UrlInputPro
       return;
     }
 
-    onAnalyze(url);
+    onAnalyze(url, false);
   };
 
   const exampleSites = [
@@ -105,24 +130,51 @@ export default function UrlInput({ onAnalyze, isAnalyzing = false }: UrlInputPro
                   )}
                 </div>
 
-                <Button
-                  type="submit"
-                  disabled={isAnalyzing}
-                  size="lg"
-                  className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
-                >
-                  {isAnalyzing ? (
-                    <>
-                      <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
-                      AI解析実行中...
-                    </>
-                  ) : (
-                    <>
-                      今すぐ解析開始
-                      <ArrowRight className="ml-2 h-4 w-4" />
-                    </>
+                <div className="space-y-3">
+                  <Button
+                    type="submit"
+                    disabled={isAnalyzing}
+                    size="lg"
+                    className="w-full bg-gradient-to-r from-blue-500 to-purple-600 hover:from-blue-600 hover:to-purple-700 shadow-lg transition-all duration-200 hover:shadow-xl hover:scale-[1.02]"
+                  >
+                    {isAnalyzing ? (
+                      <>
+                        <div className="mr-2 h-4 w-4 animate-spin rounded-full border-2 border-white border-t-transparent"></div>
+                        AI解析実行中...
+                      </>
+                    ) : (
+                      <>
+                        {hasCachedData ? 'キャッシュから表示' : '今すぐ解析開始'}
+                        <ArrowRight className="ml-2 h-4 w-4" />
+                      </>
+                    )}
+                  </Button>
+                  
+                  {/* キャッシュ情報と強制更新ボタン */}
+                  {hasCachedData && !isAnalyzing && (
+                    <div className="flex items-center justify-between text-sm">
+                      <div className="flex items-center space-x-2 text-muted-foreground">
+                        <Clock className="h-4 w-4" />
+                        <span>キャッシュ有効: {cacheTimeRemaining}</span>
+                      </div>
+                      <Button
+                        type="button"
+                        onClick={(e) => {
+                          e.preventDefault();
+                          if (validateUrl(url)) {
+                            onAnalyze(url, true); // 強制更新
+                          }
+                        }}
+                        variant="ghost"
+                        size="sm"
+                        className="text-xs"
+                      >
+                        <RefreshCw className="h-3 w-3 mr-1" />
+                        強制更新
+                      </Button>
+                    </div>
                   )}
-                </Button>
+                </div>
               </form>
 
               {/* Example URLs */}

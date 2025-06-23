@@ -1,27 +1,51 @@
 'use client';
 
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import Header from '@/components/Header';
 import UrlInput from '@/components/UrlInput';
 import ProgressIndicator from '@/components/ProgressIndicator';
 import ScoreDashboard from '@/components/ScoreDashboard';
 import DetailedAnalysis from '@/components/DetailedAnalysis';
 import SuggestionsList from '@/components/SuggestionsList';
+import HistoryPanel from '@/components/HistoryPanel';
+import ExportMenu from '@/components/ExportMenu';
+import BatchAnalysis from '@/components/BatchAnalysis';
+import CacheInfo from '@/components/CacheInfo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AnalysisResult, AnalysisProgress } from '@/lib/types';
 import { Calendar, Globe, AlertCircle } from 'lucide-react';
+import { addToHistory, HistoryItem } from '@/lib/utils/history';
+import { getCachedAnalysis, setCachedAnalysis, isCached, getCacheTimeRemainingFormatted } from '@/lib/utils/cache';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState<AnalysisProgress | null>(null);
   const [results, setResults] = useState<AnalysisResult | null>(null);
   const [error, setError] = useState<string | null>(null);
+  const [selectedUrl, setSelectedUrl] = useState<string>('');
+  const [activeTab, setActiveTab] = useState<'single' | 'batch'>('single');
 
-  const handleAnalyze = async (url: string) => {
+  const handleAnalyze = async (url: string, forceRefresh: boolean = false) => {
     setIsAnalyzing(true);
     setError(null);
     setResults(null);
+    
+    // キャッシュチェック（強制更新でない場合）
+    if (!forceRefresh) {
+      const cachedResult = getCachedAnalysis(url);
+      if (cachedResult) {
+        console.log('キャッシュから結果を取得:', url);
+        setResults({
+          ...cachedResult,
+          fromCache: true,
+          cacheTimeRemaining: getCacheTimeRemainingFormatted(url)
+        } as any);
+        setIsAnalyzing(false);
+        return;
+      }
+    }
+    
     setProgress({
       stage: 'fetching',
       percentage: 0,
@@ -51,7 +75,10 @@ export default function Home() {
         headers: {
           'Content-Type': 'application/json',
         },
-        body: JSON.stringify({ url }),
+        body: JSON.stringify({ 
+          url, 
+          bypassCache: forceRefresh 
+        }),
       });
 
       if (!response.ok) {
@@ -60,6 +87,14 @@ export default function Home() {
 
       const data = await response.json();
       setResults(data);
+      
+      // キャッシュに保存（フォールバックデータでない場合のみ）
+      if (!data.isFallbackData) {
+        setCachedAnalysis(url, data);
+      }
+      
+      // 履歴に保存
+      addToHistory(data);
     } catch (err) {
       setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
     } finally {
@@ -73,10 +108,69 @@ export default function Home() {
       <Header />
       
       {/* Hero and Input Section */}
-      <UrlInput onAnalyze={handleAnalyze} isAnalyzing={isAnalyzing} />
+      {activeTab === 'single' ? (
+        <UrlInput 
+          onAnalyze={handleAnalyze} 
+          isAnalyzing={isAnalyzing} 
+          initialUrl={selectedUrl}
+        />
+      ) : (
+        <div className="relative overflow-hidden bg-gradient-to-br from-slate-50 via-blue-50 to-purple-50 py-24">
+          <div className="container relative mx-auto px-4">
+            <div className="mx-auto max-w-4xl">
+              <div className="mb-12 text-center animate-fade-in">
+                <div className="mx-auto mb-6 flex h-20 w-20 items-center justify-center rounded-full bg-gradient-to-r from-blue-500 to-purple-600 shadow-2xl">
+                  <Globe className="h-10 w-10 text-white" />
+                </div>
+                <h1 className="mb-4 text-4xl font-bold tracking-tight text-foreground md:text-6xl">
+                  一括解析で
+                  <span className="gradient-text"> 効率化</span>
+                </h1>
+                <p className="mx-auto max-w-2xl text-lg text-muted-foreground md:text-xl">
+                  複数のURLをまとめて解析し、
+                  <br className="hidden md:block" />
+                  比較レポートを生成します。
+                </p>
+              </div>
+              <BatchAnalysis onAnalysisComplete={(results) => {
+                // 一括解析の結果を履歴に保存
+                results.forEach(result => addToHistory(result));
+              }} />
+            </div>
+          </div>
+        </div>
+      )}
+      
+      {/* Tab Navigation */}
+      <div className="container mx-auto px-4 py-6">
+        <div className="flex justify-center">
+          <div className="inline-flex rounded-lg border border-muted p-1 bg-muted/50">
+            <button
+              onClick={() => setActiveTab('single')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === 'single'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              単発解析
+            </button>
+            <button
+              onClick={() => setActiveTab('batch')}
+              className={`px-6 py-2 rounded-md text-sm font-medium transition-all ${
+                activeTab === 'batch'
+                  ? 'bg-background text-foreground shadow-sm'
+                  : 'text-muted-foreground hover:text-foreground'
+              }`}
+            >
+              一括解析
+            </button>
+          </div>
+        </div>
+      </div>
       
       {/* Progress Indicator */}
-      {isAnalyzing && progress && (
+      {isAnalyzing && progress && activeTab === 'single' && (
         <ProgressIndicator progress={progress} />
       )}
       
@@ -126,6 +220,11 @@ export default function Home() {
                     <Calendar className="h-3 w-3" />
                     <span className="text-xs">{new Date(results.timestamp).toLocaleString('ja-JP')}</span>
                   </Badge>
+                  <CacheInfo 
+                    fromCache={(results as any).fromCache}
+                    cacheHit={(results as any).cacheHit}
+                    cacheTimeRemaining={(results as any).cacheTimeRemaining}
+                  />
                 </div>
               </div>
             </CardHeader>
@@ -161,6 +260,42 @@ export default function Home() {
             </div>
             <SuggestionsList suggestions={results.suggestions} />
           </section>
+          
+          {/* Export Section */}
+          <section className="space-y-6">
+            <div className="text-center space-y-4">
+              <h2 className="text-3xl font-bold text-foreground">
+                解析結果のエクスポート
+              </h2>
+              <p className="text-lg text-muted-foreground max-w-2xl mx-auto">
+                詳細なレポートをダウンロードして、チームと共有しましょう
+              </p>
+            </div>
+            <div className="max-w-2xl mx-auto">
+              <ExportMenu result={results} />
+            </div>
+          </section>
+        </div>
+      )}
+      
+      {/* History Panel */}
+      {!isAnalyzing && !results && activeTab === 'single' && (
+        <div className="container mx-auto px-4 py-8">
+          <HistoryPanel 
+            onSelectUrl={(url) => {
+              setSelectedUrl(url);
+              // URLを設定した後、自動的に解析を開始
+              handleAnalyze(url);
+            }}
+            onSelectHistory={(item: HistoryItem) => {
+              if (item.result) {
+                setResults(item.result);
+              } else {
+                setSelectedUrl(item.url);
+                handleAnalyze(item.url);
+              }
+            }}
+          />
         </div>
       )}
       
