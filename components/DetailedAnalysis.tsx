@@ -36,29 +36,90 @@ export default function DetailedAnalysis({ result }: DetailedAnalysisProps) {
             </span>
           </div>
           
+          {!result.details.llmsTxt.exists && (
+            <div className="ml-7 p-3 bg-blue-50 rounded-md">
+              <p className="text-sm text-blue-800 font-medium mb-1">📝 llms.txtの設置方法</p>
+              <p className="text-sm text-blue-700">
+                ウェブサイトのルートディレクトリに <code className="bg-blue-100 px-1 py-0.5 rounded">llms.txt</code> ファイルを設置してください。
+              </p>
+              <div className="mt-2 p-2 bg-white rounded border border-blue-200">
+                <p className="text-xs text-gray-600 mb-1">例：</p>
+                <pre className="text-xs text-gray-800">
+{`# AIクローラー向けの設定
+User-agent: *
+Allow: /
+Disallow: /admin/
+Sitemap: https://example.com/sitemap.xml`}
+                </pre>
+              </div>
+            </div>
+          )}
+          
           {result.details.llmsTxt.exists && (
             <>
               <div className="flex items-center">
                 <StatusIcon status={result.details.llmsTxt.syntax.valid ? 'success' : 'error'} />
                 <span className="ml-2 text-gray-700">
-                  {result.details.llmsTxt.syntax.valid ? '構文は正しいです' : '構文エラーがあります'}
+                  {result.details.llmsTxt.syntax.valid ? '構文は正しいです' : '構文に問題があります'}
                 </span>
               </div>
               
               {result.details.llmsTxt.syntax.errors.length > 0 && (
-                <div className="ml-7 text-sm text-red-600">
-                  <ul className="list-disc list-inside">
-                    {result.details.llmsTxt.syntax.errors.map((error, index) => (
-                      <li key={index}>{error}</li>
-                    ))}
-                  </ul>
+                <div className="ml-7">
+                  <div className="p-3 bg-red-50 rounded-md">
+                    <p className="text-sm text-red-800 font-medium mb-2">⚠️ 検出された問題と修正方法</p>
+                    <div className="space-y-2">
+                      {result.details.llmsTxt.syntax.errors.map((error, index) => {
+                        const isInvalidFormat = error.includes('無効な行形式');
+                        const isUnknownDirective = error.includes('不明なディレクティブ');
+                        const isWrongFile = error.includes('HTMLページが返されました');
+                        
+                        return (
+                          <div key={index} className="text-sm">
+                            <p className="text-red-700 mb-1">• {error}</p>
+                            {isInvalidFormat && (
+                              <div className="ml-4 p-2 bg-white rounded border border-red-200">
+                                <p className="text-xs text-gray-700 mb-1">💡 修正方法：</p>
+                                <p className="text-xs text-gray-600">
+                                  各行は <code className="bg-gray-100 px-1">ディレクティブ: 値</code> の形式にしてください。
+                                </p>
+                                <p className="text-xs text-gray-500 mt-1">例: <code className="bg-gray-100 px-1">Allow: /api/</code></p>
+                              </div>
+                            )}
+                            {isUnknownDirective && (
+                              <div className="ml-4 p-2 bg-white rounded border border-red-200">
+                                <p className="text-xs text-gray-700 mb-1">💡 修正方法：</p>
+                                <p className="text-xs text-gray-600">
+                                  使用可能なディレクティブは <code className="bg-gray-100 px-1">Allow</code>、
+                                  <code className="bg-gray-100 px-1">Disallow</code>、
+                                  <code className="bg-gray-100 px-1">Sitemap</code> です。
+                                </p>
+                              </div>
+                            )}
+                            {isWrongFile && (
+                              <div className="ml-4 p-2 bg-white rounded border border-red-200">
+                                <p className="text-xs text-gray-700 mb-1">💡 修正方法：</p>
+                                <p className="text-xs text-gray-600">
+                                  ファイル名を <code className="bg-gray-100 px-1">llms.txt</code> にして、
+                                  プレーンテキスト形式で保存してください。
+                                </p>
+                              </div>
+                            )}
+                          </div>
+                        );
+                      })}
+                    </div>
+                  </div>
                 </div>
               )}
               
-              <div className="ml-7 text-sm text-gray-600">
-                <p>Allowディレクティブ: {result.details.llmsTxt.content.allowed.length}個</p>
-                <p>Disallowディレクティブ: {result.details.llmsTxt.content.disallowed.length}個</p>
-                <p>サイトマップ: {result.details.llmsTxt.content.sitemaps.length}個</p>
+              <div className="ml-7 p-3 bg-gray-50 rounded-md">
+                <p className="text-sm text-gray-700 font-medium mb-1">📊 解析結果</p>
+                <div className="text-sm text-gray-600">
+                  <p>• Allowディレクティブ: {result.details.llmsTxt.content.allowed.length}個</p>
+                  <p>• Disallowディレクティブ: {result.details.llmsTxt.content.disallowed.length}個</p>
+                  <p>• サイトマップ: {result.details.llmsTxt.content.sitemaps.length}個</p>
+                </div>
               </div>
             </>
           )}
