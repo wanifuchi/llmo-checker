@@ -15,6 +15,8 @@ LLMO Checkerは、大規模言語モデル（LLM）によるクロールとイ�
 - **E-E-A-T評価**: 専門性・権威性・信頼性の総合評価
 
 ### 🚀 高度な機能
+- **AI競合分析**: 自動競合発見とベンチマーク比較
+- **外部API統合**: Lighthouse、SerpAPI による高精度分析
 - **履歴管理**: 解析結果を自動保存し、過去の分析を簡単に参照
 - **一括解析**: 複数URLを順次解析してまとめてレポート生成
 - **エクスポート**: JSON、PDF、CSVでの詳細レポート出力
@@ -31,6 +33,7 @@ LLMO Checkerは、大規模言語モデル（LLM）によるクロールとイ�
 - **フロントエンド**: Next.js 15 (App Router)、React 19、TypeScript
 - **スタイリング**: Tailwind CSS、shadcn/ui
 - **解析エンジン**: Puppeteer、Cheerio
+- **外部API**: Google PageSpeed Insights、SerpAPI
 - **デプロイ**: Vercel、Railway対応
 - **テスト**: Jest、Testing Library
 
@@ -161,13 +164,35 @@ railway up
 ```
 
 ### 環境変数
-本プロジェクトは環境変数を必要としませんが、カスタマイズのために以下を設定できます：
+
+#### 基本機能（環境変数なしでも動作）
+基本的なLLMO解析は追加設定なしで利用可能です。
+
+#### 高精度分析（外部API統合）
+競合分析の精度向上のため、以下の外部APIキーを設定できます：
 
 ```env
-# .env.local
-NEXT_PUBLIC_APP_NAME=LLMO Checker
-NEXT_PUBLIC_APP_VERSION=1.0.0
+# .env.local（ローカル開発用）
+SERP_API_KEY=your_serpapi_key_here
+GOOGLE_PAGESPEED_API_KEY=your_google_api_key_here
+NEXT_PUBLIC_ENABLE_EXTERNAL_APIS=true
 ```
+
+#### 本番環境設定
+```bash
+# Vercel / Railway の環境変数として設定
+SERP_API_KEY=your_serpapi_key_here
+GOOGLE_PAGESPEED_API_KEY=your_google_api_key_here
+NEXT_PUBLIC_ENABLE_EXTERNAL_APIS=true
+NODE_ENV=production
+```
+
+**⚠️ セキュリティ重要事項**
+- APIキーは絶対にソースコードにコミットしないでください
+- `.env.local` ファイルは `.gitignore` で除外されています
+- 本番環境では環境変数管理システムを使用してください
+
+詳細な設定方法は [docs/DEPLOYMENT.md](./docs/DEPLOYMENT.md) をご参照ください。
 
 ## 🛠️ カスタマイズ
 
@@ -208,10 +233,23 @@ NEXT_PUBLIC_APP_VERSION=1.0.0
 
 ## 🔒 セキュリティ
 
+### 基本セキュリティ
 - ユーザー入力のサニタイゼーション
 - XSS攻撃の防止
 - 機密情報のログ出力なし
 - 外部リクエストの制限
+
+### APIキー管理
+- `.env.local` ファイルは Git 除外済み
+- ソースコードにAPIキーのハードコーディング禁止
+- 本番環境では環境変数で安全管理
+- セキュリティチェックスクリプトによる検証
+
+### セキュリティチェック
+```bash
+# コミット前のセキュリティチェック
+./scripts/security-check.sh
+```
 
 ## 📝 ライセンス
 

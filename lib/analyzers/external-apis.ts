@@ -43,7 +43,9 @@ export interface SerpApiResult {
 export async function getLighthouseAnalysis(url: string): Promise<LighthouseResult | null> {
   try {
     // Google PageSpeed Insights API (無料)
-    const apiUrl = `https://www.googleapis.com/pagespeed/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo`;
+    const apiKey = process.env.GOOGLE_PAGESPEED_API_KEY;
+    const baseUrl = `https://www.googleapis.com/pagespeed/v5/runPagespeed?url=${encodeURIComponent(url)}&strategy=desktop&category=performance&category=accessibility&category=best-practices&category=seo`;
+    const apiUrl = apiKey ? `${baseUrl}&key=${apiKey}` : baseUrl;
     
     const response = await fetch(apiUrl);
     
