@@ -3,9 +3,9 @@ const nextConfig = {
   // Vercel環境でpuppeteer-coreと@sparticuz/chromium-minを正しく処理
   serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min'],
   
-  // SSGを無効化してSSRのみに
+  // SSGを無効化してSSRのみに（Railwayビルド対策）
   trailingSlash: false,
-  output: undefined,
+  output: 'standalone',
   
   webpack: (config, { isServer }) => {
     if (!isServer) {
