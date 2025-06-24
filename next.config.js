@@ -2,9 +2,8 @@
 const nextConfig = {
   // Puppeteer関連のサーバーサイド処理設定
   
-  // SSGを無効化してSSRのみに（Railwayビルド対策）
+  // Railway対応設定
   trailingSlash: false,
-  output: 'standalone',
   
   webpack: (config, { isServer }) => {
     if (!isServer) {
