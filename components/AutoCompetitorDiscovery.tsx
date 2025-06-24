@@ -43,11 +43,23 @@ export default function AutoCompetitorDiscovery({
       setDiscoveredCompetitors(competitors);
       setLastSearchTime(new Date());
       
+      console.log('競合発見結果:', {
+        industry,
+        targetUrl,
+        competitorsFound: competitors.length,
+        competitors: competitors
+      });
+      
       if (competitors.length > 0) {
         onCompetitorsFound(competitors);
+      } else {
+        console.warn('競合サイトが見つかりませんでした', { industry, targetUrl });
       }
     } catch (error) {
       console.error('自動競合発見エラー:', error);
+      // エラー状態を表示
+      setDiscoveredCompetitors([]);
+      setLastSearchTime(new Date()); // エラーでも時間を設定してエラー表示を可能にする
     } finally {
       setIsSearching(false);
     }
@@ -67,6 +79,12 @@ export default function AutoCompetitorDiscovery({
             <h4 className="font-medium text-purple-900">AI競合発見</h4>
             <p className="text-sm text-purple-700">
               自動的に業界の競合サイトを発見します
+            </p>
+            <p className="text-xs text-purple-600 mt-1">
+              検出業界: <span className="font-medium">{industry}</span>
+              {industry === 'other' && (
+                <span className="text-orange-600 ml-2">※汎用検索</span>
+              )}
             </p>
           </div>
         </div>
@@ -103,7 +121,7 @@ export default function AutoCompetitorDiscovery({
       )}
 
       {/* 発見された競合サイト */}
-      {discoveredCompetitors.length > 0 && (
+      {discoveredCompetitors.length > 0 ? (
         <div className="space-y-2">
           <div className="text-sm font-medium text-purple-800">
             発見された競合サイト ({discoveredCompetitors.length}件)
@@ -125,7 +143,12 @@ export default function AutoCompetitorDiscovery({
             )}
           </div>
         </div>
-      )}
+      ) : (lastSearchTime && !isSearching && (
+        <div className="p-2 bg-orange-50 border border-orange-200 rounded text-sm text-orange-800">
+          ⚠️ 「{industry}」業界での競合サイトが見つかりませんでした。
+          手動で競合URLを入力してください。
+        </div>
+      ))}
 
       {/* 使用方法の説明 */}
       <div className="mt-3 p-2 bg-purple-100 rounded text-xs text-purple-700">

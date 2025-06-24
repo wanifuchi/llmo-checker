@@ -121,6 +121,7 @@ function generateSearchQueries(targetUrl: string, industry: string): string[] {
     'finance': ['金融 サービス', '投資 証券', 'ローン 銀行'],
     'education': ['オンライン学習', '教育 スクール', 'eラーニング'],
     'technology': ['IT サービス', 'ソフトウェア開発', 'アプリ 開発'],
+    'funeral': ['葬儀社', '葬式 サービス', '斎場 葬儀'],
     'other': ['ビジネス サービス', '企業 サイト', 'サービス 比較']
   };
   

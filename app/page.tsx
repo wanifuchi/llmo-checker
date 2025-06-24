@@ -33,6 +33,62 @@ export default function Home() {
   const [competitorUrls, setCompetitorUrls] = useState<string[]>([]);
   const [isCompetitiveAnalyzing, setIsCompetitiveAnalyzing] = useState(false);
   const [shouldScrollToResults, setShouldScrollToResults] = useState(false);
+  const [inferredIndustry, setInferredIndustry] = useState<string>('other');
+
+  // 解析結果から業界を推測する関数
+  const inferIndustryFromResults = (result: AnalysisResult): string => {
+    const url = result.url.toLowerCase();
+    // URL、コンテンツ構造、検出されたスキーマから業界を推測
+    const contentElements = result.details.content;
+    const schemas = result.details.structuredData.schemas;
+    const schemaTypes = schemas.map(s => s.type.toLowerCase()).join(' ');
+    const content = `${url} ${schemaTypes}`;
+
+    // E-commerce keywords
+    if (content.includes('shop') || content.includes('store') || content.includes('cart') || 
+        content.includes('商品') || content.includes('購入') || content.includes('通販') ||
+        content.includes('ec') || content.includes('mall')) {
+      return 'ecommerce';
+    }
+    
+    // Healthcare keywords
+    if (content.includes('health') || content.includes('medical') || content.includes('clinic') ||
+        content.includes('hospital') || content.includes('医療') || content.includes('病院') ||
+        content.includes('クリニック') || content.includes('診療')) {
+      return 'healthcare';
+    }
+    
+    // Finance keywords
+    if (content.includes('bank') || content.includes('finance') || content.includes('loan') ||
+        content.includes('invest') || content.includes('銀行') || content.includes('金融') ||
+        content.includes('投資') || content.includes('証券')) {
+      return 'finance';
+    }
+    
+    // Education keywords
+    if (content.includes('school') || content.includes('education') || content.includes('learning') ||
+        content.includes('course') || content.includes('学校') || content.includes('教育') ||
+        content.includes('学習') || content.includes('講座')) {
+      return 'education';
+    }
+    
+    // Technology keywords
+    if (content.includes('tech') || content.includes('software') || content.includes('app') ||
+        content.includes('system') || content.includes('it') || content.includes('tech') ||
+        content.includes('システム') || content.includes('ソフトウェア') || content.includes('アプリ')) {
+      return 'technology';
+    }
+    
+    // Funeral keywords
+    if (content.includes('funeral') || content.includes('葬儀') || content.includes('葬式') ||
+        content.includes('告別式') || content.includes('memorial') || content.includes('斎場') ||
+        content.includes('霊園') || content.includes('cemetery') || content.includes('ending') ||
+        content.includes('セレモニー') || content.includes('供養')) {
+      return 'funeral';
+    }
+    
+    return 'other';
+  };
 
   const handleAnalyze = async (url: string, forceRefresh: boolean = false) => {
     setIsAnalyzing(true);
@@ -44,11 +100,18 @@ export default function Home() {
       const cachedResult = getCachedAnalysis(url);
       if (cachedResult) {
         console.log('キャッシュから結果を取得:', url);
-        setResults({
+        const resultWithCache = {
           ...cachedResult,
           fromCache: true,
           cacheTimeRemaining: getCacheTimeRemainingFormatted(url)
-        } as any);
+        } as any;
+        setResults(resultWithCache);
+        
+        // キャッシュされた結果からも業界を推測
+        const inferred = inferIndustryFromResults(resultWithCache);
+        setInferredIndustry(inferred);
+        console.log('推測された業界 (キャッシュ):', inferred, 'for URL:', resultWithCache.url);
+        
         setIsAnalyzing(false);
         return;
       }
@@ -95,6 +158,11 @@ export default function Home() {
 
       const data = await response.json();
       setResults(data);
+      
+      // 業界を推測して設定
+      const inferred = inferIndustryFromResults(data);
+      setInferredIndustry(inferred);
+      console.log('推測された業界:', inferred, 'for URL:', data.url);
       
       // キャッシュに保存（フォールバックデータでない場合のみ）
       if (!data.isFallbackData) {
@@ -222,7 +290,7 @@ export default function Home() {
                   <CompetitorInput 
                     onCompetitorsChange={setCompetitorUrls}
                     targetUrl={results.url}
-                    industry="other"
+                    industry={inferredIndustry}
                   />
                   {competitorUrls.length > 0 && (
                     <div className="text-center">

@@ -5,6 +5,7 @@ export function suggestCompetitorsSync(url: string, industry: string): string[] 
     'healthcare': ['https://www.hospita.jp', 'https://fdoc.jp'],
     'finance': ['https://www.rakuten-sec.co.jp', 'https://www.sbi-sec.co.jp'],
     'education': ['https://benesse.jp', 'https://schoo.jp'],
+    'funeral': ['https://www.sousai-sougi.com', 'https://www.sogi.co.jp'],
     'other': []
   };
   

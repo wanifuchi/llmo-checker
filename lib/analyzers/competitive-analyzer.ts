@@ -14,6 +14,7 @@ const INDUSTRY_MAPPING: Record<string, string[]> = {
   'real-estate': ['property', 'house', 'rent', 'real estate', 'home', 'apartment'],
   'legal': ['law', 'lawyer', 'legal', 'attorney', 'court', 'justice'],
   'consulting': ['consulting', 'consultant', 'advisory', 'business', 'strategy'],
+  'funeral': ['葬儀', '葬式', 'funeral', '告別式', 'memorial', 'ending', 'セレモニー', '斎場', '霊園', 'cemetery'],
   'other': []
 };
 
@@ -39,6 +40,13 @@ const INDUSTRY_BENCHMARKS: Record<string, IndustryBenchmarks> = {
     topPerformerScores: { overall: 95, technical: 98, structuredData: 92, content: 90, eeat: 98 },
     commonFeatures: ['金融商品スキーマ', 'セキュリティ強化', '規制遵守', '透明性向上'],
     emergingTrends: ['FinTech統合', '暗号通貨対応', 'AI財務アドバイザー']
+  },
+  'funeral': {
+    industry: '葬儀・エンディング',
+    averageScores: { overall: 65, technical: 70, structuredData: 55, content: 75, eeat: 80 },
+    topPerformerScores: { overall: 88, technical: 90, structuredData: 85, content: 92, eeat: 95 },
+    commonFeatures: ['葬儀サービススキーマ', '施設情報', '料金体系', '連絡先情報', 'アクセス情報'],
+    emergingTrends: ['オンライン葬儀対応', 'デジタル供養', '生前契約システム', '遺族サポート強化']
   },
   'other': {
     industry: 'その他',
@@ -180,21 +188,25 @@ function getImplementationAdvice(area: string, industry: string): string {
     'technical': {
       'ecommerce': 'Core Web Vitalsの改善、CDN導入、画像最適化',
       'healthcare': 'アクセシビリティ強化、セキュリティ証明書、HTTPS完全移行',
+      'funeral': 'SSL証明書の実装、24時間アクセス対応、モバイル最適化',
       'default': 'ページ速度最適化、モバイルファースト設計、技術的SEO改善'
     },
     'structuredData': {
       'ecommerce': '商品・レビュー・価格スキーマの実装',
       'healthcare': '医療機関・医師・サービススキーマの実装',
+      'funeral': '葬儀社・施設・サービス・料金体系のスキーマ実装',
       'default': '組織・記事・FAQスキーマの実装'
     },
     'content': {
       'ecommerce': '商品説明の充実、ユーザーレビュー活用、FAQ追加',
       'healthcare': '専門的かつ分かりやすい医療情報、症例・治療法の詳細',
+      'funeral': '明確な料金体系、サービス内容、施設案内、お客様の声',
       'default': 'ユーザーニーズに応じたコンテンツ充実、FAQ・用語集追加'
     },
     'eeat': {
       'ecommerce': '運営会社情報の充実、顧客サポート体制の明示',
       'healthcare': '医師・専門家プロフィール、資格・経歴の詳細表示',
+      'funeral': '葬祭ディレクター資格、実績・経験年数、お客様の声・事例',
       'default': '著者情報、組織の信頼性、専門性の証明'
     }
   };
@@ -422,6 +434,7 @@ export async function suggestCompetitors(url: string, industry: string): Promise
       'finance': ['https://www.rakuten-sec.co.jp', 'https://www.sbi-sec.co.jp', 'https://kabu.com'],
       'education': ['https://benesse.jp', 'https://schoo.jp', 'https://www.udemy.com'],
       'technology': ['https://qiita.com', 'https://zenn.dev', 'https://github.com'],
+      'funeral': ['https://www.sousai-sougi.com', 'https://www.sogi.co.jp', 'https://www.zenkokusai.jp'],
       'other': ['https://www.wantedly.com', 'https://corp.freee.co.jp']
     };
     
@@ -441,6 +454,7 @@ export function suggestCompetitorsSync(url: string, industry: string): string[] 
     'healthcare': ['https://www.hospita.jp', 'https://fdoc.jp'],
     'finance': ['https://www.rakuten-sec.co.jp', 'https://www.sbi-sec.co.jp'],
     'education': ['https://benesse.jp', 'https://schoo.jp'],
+    'funeral': ['https://www.sousai-sougi.com', 'https://www.sogi.co.jp'],
     'other': []
   };
   
