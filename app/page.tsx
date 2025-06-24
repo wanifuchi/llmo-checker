@@ -14,12 +14,13 @@ import CacheInfo from '@/components/CacheInfo';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Badge } from '@/components/ui/badge';
 import { AnalysisResult, AnalysisProgress, CompetitiveAnalysis } from '@/lib/types';
-import { Calendar, Globe, AlertCircle, Users } from 'lucide-react';
+import { Calendar, Globe, AlertCircle, Users, ChevronDown } from 'lucide-react';
 import { addToHistory, HistoryItem } from '@/lib/utils/history';
 import { getCachedAnalysis, setCachedAnalysis, isCached, getCacheTimeRemainingFormatted } from '@/lib/utils/cache';
 import CompetitorInput from '@/components/CompetitorInput';
 import CompetitiveAnalysisComponent from '@/components/CompetitiveAnalysis';
 import ApiStatusPanel from '@/components/ApiStatusPanel';
+import ScrollToResults from '@/components/ScrollToResults';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -31,6 +32,7 @@ export default function Home() {
   const [competitiveAnalysis, setCompetitiveAnalysis] = useState<CompetitiveAnalysis | null>(null);
   const [competitorUrls, setCompetitorUrls] = useState<string[]>([]);
   const [isCompetitiveAnalyzing, setIsCompetitiveAnalyzing] = useState(false);
+  const [shouldScrollToResults, setShouldScrollToResults] = useState(false);
 
   const handleAnalyze = async (url: string, forceRefresh: boolean = false) => {
     setIsAnalyzing(true);
@@ -101,6 +103,14 @@ export default function Home() {
       
       // 履歴に保存
       addToHistory(data);
+      
+      // スクロールトリガーを有効化
+      setShouldScrollToResults(true);
+      
+      // 一定時間後にトリガーをリセット
+      setTimeout(() => {
+        setShouldScrollToResults(false);
+      }, 3000);
     } catch (err) {
       setError(err instanceof Error ? err.message : '不明なエラーが発生しました');
     } finally {
@@ -277,7 +287,19 @@ export default function Home() {
       
       {/* Progress Indicator */}
       {isAnalyzing && progress && activeTab === 'single' && (
-        <ProgressIndicator progress={progress} />
+        <div className="space-y-4">
+          <ProgressIndicator progress={progress} />
+          {progress.percentage > 80 && (
+            <div className="container mx-auto px-4">
+              <div className="max-w-2xl mx-auto text-center p-4 bg-blue-50 border border-blue-200 rounded-lg">
+                <ChevronDown className="h-5 w-5 text-blue-600 mx-auto mb-2 animate-bounce" />
+                <p className="text-sm text-blue-800">
+                  🎉 解析がほぼ完了しました！結果は下部に自動表示されます。
+                </p>
+              </div>
+            </div>
+          )}
+        </div>
       )}
       
       {/* Error Display */}
@@ -309,14 +331,17 @@ export default function Home() {
       
       {/* Results Section */}
       {results && activeTab === 'single' && (
-        <div className="container mx-auto px-4 py-12 space-y-12">
+        <div id="analysis-results-report" className="container mx-auto px-4 py-12 space-y-12 scroll-mt-20">
           {/* Analysis Header */}
-          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl">
+          <Card className="border-0 bg-white/80 backdrop-blur-sm shadow-xl transform transition-all duration-500 animate-in slide-in-from-bottom-4">
             <CardHeader>
               <div className="flex flex-col md:flex-row md:items-center md:justify-between space-y-4 md:space-y-0">
                 <div>
-                  <CardTitle className="text-2xl text-foreground mb-2">
+                  <CardTitle className="text-2xl text-foreground mb-2 flex items-center">
                     解析結果レポート
+                    <span className="ml-2 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full animate-pulse">
+                      結果表示中
+                    </span>
                   </CardTitle>
                   <p className="text-muted-foreground">
                     AI時代に向けた包括的なウェブサイト最適化分析
@@ -412,6 +437,11 @@ export default function Home() {
             onSelectHistory={(item: HistoryItem) => {
               if (item.result) {
                 setResults(item.result);
+                // 履歴から結果を選択した場合もスクロール
+                setShouldScrollToResults(true);
+                setTimeout(() => {
+                  setShouldScrollToResults(false);
+                }, 3000);
               } else {
                 setSelectedUrl(item.url);
                 handleAnalyze(item.url);
@@ -420,6 +450,13 @@ export default function Home() {
           />
         </div>
       )}
+      
+      {/* スクロールアシスタント */}
+      <ScrollToResults 
+        shouldScroll={shouldScrollToResults && !!results && activeTab === 'single'}
+        targetId="analysis-results-report"
+        delay={800}
+      />
       
       {/* Footer */}
       <footer className="border-t bg-background/80 backdrop-blur-sm">

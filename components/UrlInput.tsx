@@ -64,6 +64,9 @@ export default function UrlInput({ onAnalyze, isAnalyzing = false, initialUrl = 
       return;
     }
 
+    // 解析開始時にページトップにスクロール
+    window.scrollTo({ top: 0, behavior: 'smooth' });
+    
     onAnalyze(url, false);
   };
 
