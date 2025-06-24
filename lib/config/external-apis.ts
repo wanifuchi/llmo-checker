@@ -40,9 +40,14 @@ const DEFAULT_CONFIG: ExternalApiConfig = {
 };
 
 /**
- * 現在の外部API設定を取得
+ * 現在の外部API設定を取得（サーバーサイドのみ）
  */
 export function getExternalApiConfig(): ExternalApiConfig {
+  // サーバーサイドでのみ実行されることを保証
+  if (typeof window !== 'undefined') {
+    throw new Error('getExternalApiConfigはサーバーサイドでのみ使用できます');
+  }
+  
   return {
     ...DEFAULT_CONFIG,
     serpApi: {
@@ -62,30 +67,47 @@ export function getExternalApiConfig(): ExternalApiConfig {
 }
 
 /**
- * 特定のAPIが使用可能かチェック
+ * 特定のAPIが使用可能かチェック（サーバーサイドのみ）
  */
 export function isApiEnabled(apiName: keyof ExternalApiConfig): boolean {
+  if (typeof window !== 'undefined') {
+    return false; // クライアントサイドでは常にfalse
+  }
+  
   const config = getExternalApiConfig();
   return config[apiName].enabled;
 }
 
 /**
- * API使用量チェック（SerpAPI用）
+ * API使用量チェック（SerpAPI用）（サーバーサイドのみ）
  */
 export function canUseSerpApi(): boolean {
+  if (typeof window !== 'undefined') {
+    return false; // クライアントサイドでは常にfalse
+  }
+  
   const config = getExternalApiConfig();
   return config.serpApi.enabled && 
          config.serpApi.currentUsage < config.serpApi.monthlyLimit;
 }
 
 /**
- * API設定の診断情報
+ * API設定の診断情報（サーバーサイドのみ）
  */
 export function getApiDiagnostics(): {
   serpApi: { status: string; message: string; };
   lighthouse: { status: string; message: string; };
   googlePageSpeed: { status: string; message: string; };
 } {
+  // クライアントサイドでのフォールバック
+  if (typeof window !== 'undefined') {
+    return {
+      serpApi: { status: 'unknown', message: 'サーバーから情報を取得中...' },
+      lighthouse: { status: 'unknown', message: 'サーバーから情報を取得中...' },
+      googlePageSpeed: { status: 'unknown', message: 'サーバーから情報を取得中...' }
+    };
+  }
+  
   const config = getExternalApiConfig();
   
   return {
@@ -113,7 +135,7 @@ export function getApiDiagnostics(): {
 }
 
 /**
- * 設定状況のサマリー
+ * 設定状況のサマリー（サーバーサイドのみ）
  */
 export function getConfigSummary(): {
   totalApis: number;
@@ -121,6 +143,16 @@ export function getConfigSummary(): {
   freeApis: number;
   warnings: string[];
 } {
+  // クライアントサイドでのフォールバック
+  if (typeof window !== 'undefined') {
+    return {
+      totalApis: 3,
+      enabledApis: 0,
+      freeApis: 2,
+      warnings: ['サーバーから情報を取得中...']
+    };
+  }
+  
   const config = getExternalApiConfig();
   const diagnostics = getApiDiagnostics();
   

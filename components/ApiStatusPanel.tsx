@@ -10,11 +10,27 @@ export default function ApiStatusPanel() {
   const [summary, setSummary] = useState<any>(null);
 
   useEffect(() => {
-    // クライアントサイドでのみ設定を読み込み
-    const diag = getApiDiagnostics();
-    const sum = getConfigSummary();
-    setDiagnostics(diag);
-    setSummary(sum);
+    // APIエンドポイントから設定情報を取得
+    const fetchApiStatus = async () => {
+      try {
+        const response = await fetch('/api/test-apis');
+        const data = await response.json();
+        
+        if (data.success) {
+          setDiagnostics(data.diagnostics);
+          setSummary(data.summary);
+        }
+      } catch (error) {
+        console.error('API設定情報の取得に失敗:', error);
+        // フォールバック: クライアントサイドで取得可能な情報のみ使用
+        const diag = getApiDiagnostics();
+        const sum = getConfigSummary();
+        setDiagnostics(diag);
+        setSummary(sum);
+      }
+    };
+    
+    fetchApiStatus();
   }, []);
 
   if (!diagnostics || !summary) {
