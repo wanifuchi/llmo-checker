@@ -1,7 +1,6 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Vercel環境でpuppeteer-coreと@sparticuz/chromium-minを正しく処理
-  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min'],
+  // Puppeteer関連のサーバーサイド処理設定
   
   // SSGを無効化してSSRのみに（Railwayビルド対策）
   trailingSlash: false,

@@ -1,0 +1,12 @@
+node_modules
+.next
+.env.local
+.git
+.gitignore
+README.md
+.eslintrc.json
+.DS_Store
+*.log
+coverage
+.vscode
+.idea

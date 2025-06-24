@@ -9,14 +9,19 @@ export async function getBrowser() {
   let executablePath;
   let args = [];
   
-  if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT) {
-    // AWS Lambda/Vercel/Railway環境では動的インポート
-    const chromium = await import('@sparticuz/chromium-min').then(mod => mod.default);
-    
-    executablePath = await chromium.executablePath(
-      'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
-    );
-    args = [...chromium.args];
+  if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL) {
+    try {
+      // AWS Lambda/Vercel/Railway環境では動的インポート
+      const chromium = await import('@sparticuz/chromium-min').then(mod => mod.default);
+      
+      executablePath = await chromium.executablePath(
+        'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
+      );
+      args = [...chromium.args];
+    } catch (e) {
+      console.error('Chromium import failed, using fallback:', e);
+      throw new Error('Chromium not available in production environment');
+    }
   } else {
     // ローカル環境では事前インストールされたChromiumを使用
     executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
