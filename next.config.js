@@ -3,6 +3,10 @@ const nextConfig = {
   // Vercel環境でpuppeteer-coreと@sparticuz/chromium-minを正しく処理
   serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min'],
   
+  // SSGを無効化してSSRのみに
+  trailingSlash: false,
+  output: undefined,
+  
   webpack: (config, { isServer }) => {
     if (!isServer) {
       // クライアントサイドでは Node.js モジュールと puppeteer をすべて無効化

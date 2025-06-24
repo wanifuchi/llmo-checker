@@ -9,6 +9,9 @@ export const metadata: Metadata = {
   description: 'ウェブサイトのLLMO（Large Language Model Optimization）最適化状況を分析します',
 }
 
+// SSRを無効化してクライアントサイドレンダリングのみに
+export const dynamic = 'force-dynamic';
+
 export default function RootLayout({
   children,
 }: Readonly<{

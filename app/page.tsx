@@ -1,6 +1,9 @@
 'use client';
 
 import { useState, useEffect } from 'react';
+
+// SSRを無効化してクライアントサイドレンダリングのみに
+export const dynamic = 'force-dynamic';
 import Header from '@/components/Header';
 import UrlInput from '@/components/UrlInput';
 import ProgressIndicator from '@/components/ProgressIndicator';
