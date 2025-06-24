@@ -1,17 +1,18 @@
-import chromium from '@sparticuz/chromium-min';
 import puppeteerCore from 'puppeteer-core';
 
 // 開発環境かどうかを判定
 const isDev = process.env.NODE_ENV === 'development';
 
 export async function getBrowser() {
-  // 本番環境（Vercel）では@sparticuz/chromium-minを使用
+  // 本番環境（Railway/Vercel）では@sparticuz/chromium-minを動的インポート
   
   let executablePath;
   let args = [];
   
-  if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL) {
-    // AWS Lambda/Vercel環境
+  if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT) {
+    // AWS Lambda/Vercel/Railway環境では動的インポート
+    const chromium = await import('@sparticuz/chromium-min').then(mod => mod.default);
+    
     executablePath = await chromium.executablePath(
       'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
     );
