@@ -2,7 +2,8 @@
 
 import { useState } from 'react';
 import { Plus, X, Search, Sparkles } from 'lucide-react';
-import { suggestCompetitors } from '@/lib/analyzers/competitive-analyzer';
+import { suggestCompetitorsSync } from '@/lib/analyzers/competitive-analyzer';
+import AutoCompetitorDiscovery from './AutoCompetitorDiscovery';
 
 interface CompetitorInputProps {
   onCompetitorsChange: (competitors: string[]) => void;
@@ -47,7 +48,7 @@ export default function CompetitorInput({ onCompetitorsChange, targetUrl, indust
 
   const getSuggestions = () => {
     if (!industry) return [];
-    return suggestCompetitors(targetUrl || '', industry).filter(url => !competitors.includes(url));
+    return suggestCompetitorsSync(targetUrl || '', industry).filter(url => !competitors.includes(url));
   };
 
   return (
@@ -107,36 +108,50 @@ export default function CompetitorInput({ onCompetitorsChange, targetUrl, indust
           </div>
         )}
 
+        {/* AI競合発見機能 */}
+        <AutoCompetitorDiscovery
+          targetUrl={targetUrl || ''}
+          industry={industry || 'other'}
+          onCompetitorsFound={(discoveredCompetitors) => {
+            // 発見された競合を既存リストに追加（重複除去）
+            const newCompetitors = discoveredCompetitors.filter(url => !competitors.includes(url));
+            const updatedCompetitors = [...competitors, ...newCompetitors].slice(0, 5);
+            setCompetitors(updatedCompetitors);
+            onCompetitorsChange(updatedCompetitors);
+          }}
+          disabled={competitors.length >= 5}
+        />
+
         {/* 推奨競合サイト */}
         {industry && getSuggestions().length > 0 && (
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                推奨競合サイト
+                業界別推奨サイト
               </label>
               <button
                 onClick={() => setShowSuggestions(!showSuggestions)}
-                className="flex items-center text-xs text-blue-600 hover:text-blue-800"
+                className="flex items-center text-xs text-gray-600 hover:text-gray-800"
               >
                 <Sparkles className="h-3 w-3 mr-1" />
-                AI提案
+                静的リスト
               </button>
             </div>
             
             {showSuggestions && (
               <div className="space-y-2">
                 {getSuggestions().slice(0, 3).map((suggestion, index) => (
-                  <div key={index} className="flex items-center justify-between p-3 bg-blue-50 rounded-md border border-blue-200">
+                  <div key={index} className="flex items-center justify-between p-3 bg-gray-50 rounded-md border border-gray-200">
                     <div>
-                      <span className="text-sm font-medium text-blue-800">{suggestion}</span>
-                      <div className="text-xs text-blue-600">
+                      <span className="text-sm font-medium text-gray-800">{suggestion}</span>
+                      <div className="text-xs text-gray-600">
                         {industry}業界の代表的サイト
                       </div>
                     </div>
                     <button
                       onClick={() => addSuggestedCompetitor(suggestion)}
                       disabled={competitors.length >= 5}
-                      className="px-3 py-1 text-xs bg-blue-600 text-white rounded hover:bg-blue-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
+                      className="px-3 py-1 text-xs bg-gray-600 text-white rounded hover:bg-gray-700 disabled:bg-gray-300 disabled:cursor-not-allowed"
                     >
                       追加
                     </button>

@@ -19,6 +19,7 @@ import { addToHistory, HistoryItem } from '@/lib/utils/history';
 import { getCachedAnalysis, setCachedAnalysis, isCached, getCacheTimeRemainingFormatted } from '@/lib/utils/cache';
 import CompetitorInput from '@/components/CompetitorInput';
 import CompetitiveAnalysisComponent from '@/components/CompetitiveAnalysis';
+import ApiStatusPanel from '@/components/ApiStatusPanel';
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
@@ -393,9 +394,15 @@ export default function Home() {
         </div>
       )}
       
-      {/* History Panel */}
+      {/* History Panel and API Status */}
       {!isAnalyzing && !results && activeTab === 'single' && (
-        <div className="container mx-auto px-4 py-8">
+        <div className="container mx-auto px-4 py-8 space-y-8">
+          {/* API状態パネル */}
+          <div className="max-w-4xl mx-auto">
+            <ApiStatusPanel />
+          </div>
+          
+          {/* 履歴パネル */}
           <HistoryPanel 
             onSelectUrl={(url) => {
               setSelectedUrl(url);

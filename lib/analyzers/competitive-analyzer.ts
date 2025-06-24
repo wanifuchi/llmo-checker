@@ -1,4 +1,5 @@
 import { AnalysisResult, CompetitiveAnalysis, CompetitorSite, CompetitorGap, IndustryBenchmarks, CompetitiveRecommendation } from '@/lib/types';
+import { getEnhancedCompetitorAnalysis, integrateLighthouseScores, findCompetitorsByKeywords } from './external-apis';
 
 // 業界マッピング
 const INDUSTRY_MAPPING: Record<string, string[]> = {
@@ -201,10 +202,11 @@ function getImplementationAdvice(area: string, industry: string): string {
 }
 
 /**
- * 競合サイトを実際に解析する
+ * 拡張された競合サイト解析（外部API統合）
  */
 async function analyzeCompetitorSite(url: string): Promise<AnalysisResult> {
   try {
+    // 1. 内部解析API呼び出し
     const response = await fetch('/api/analyze', {
       method: 'POST',
       headers: {
@@ -217,8 +219,15 @@ async function analyzeCompetitorSite(url: string): Promise<AnalysisResult> {
       throw new Error(`Failed to analyze ${url}`);
     }
 
-    const data = await response.json();
-    return data;
+    const internalAnalysis = await response.json();
+    
+    // 2. 外部API（Lighthouse）で強化
+    const { lighthouseData } = await getEnhancedCompetitorAnalysis(url);
+    
+    // 3. 内部解析とLighthouseデータを統合
+    const enhancedAnalysis = integrateLighthouseScores(internalAnalysis, lighthouseData);
+    
+    return enhancedAnalysis;
   } catch (error) {
     console.warn(`競合サイト ${url} の解析に失敗。フォールバックデータを使用:`, error);
     
@@ -296,12 +305,22 @@ export async function performCompetitiveAnalysis(
   targetAnalysis: AnalysisResult,
   competitorUrls: string[]
 ): Promise<CompetitiveAnalysis> {
-  // 各競合URLを実際に解析
+  // ターゲットサイトもLighthouseで強化
+  const enhancedTargetAnalysis = await (async () => {
+    try {
+      const { lighthouseData } = await getEnhancedCompetitorAnalysis(targetUrl);
+      return integrateLighthouseScores(targetAnalysis, lighthouseData);
+    } catch {
+      return targetAnalysis; // エラー時は元の解析結果を使用
+    }
+  })();
+  
+  // 各競合URLを実際に解析（外部API統合版）
   const competitors: CompetitorSite[] = await Promise.all(
     competitorUrls.map(async (url, index) => {
       const analysis = await analyzeCompetitorSite(url);
       
-      const allScores = [targetAnalysis.scores.overall, analysis.scores.overall];
+      const allScores = [enhancedTargetAnalysis.scores.overall, analysis.scores.overall];
       
       return {
         url,
@@ -314,6 +333,9 @@ export async function performCompetitiveAnalysis(
     })
   );
   
+  // 強化されたターゲット解析を使用してギャップ分析も更新
+  const gapAnalysis = performGapAnalysis(enhancedTargetAnalysis, competitors);
+  
   const industry = detectIndustry(targetUrl, targetAnalysis);
   const benchmarks = INDUSTRY_BENCHMARKS[industry] || INDUSTRY_BENCHMARKS['other'];
   
@@ -325,7 +347,7 @@ export async function performCompetitiveAnalysis(
     industry
   };
   
-  const gapAnalysis = performGapAnalysis(targetAnalysis, competitors);
+  // ギャップ分析は上で実行済み
   const recommendations = generateCompetitiveRecommendations(gapAnalysis, competitors, industry);
   
   return {
@@ -339,17 +361,45 @@ export async function performCompetitiveAnalysis(
 }
 
 /**
- * 推奨競合サイトを自動提案
+ * 推奨競合サイトを自動提案（外部API強化版）
  */
-export function suggestCompetitors(url: string, industry: string): string[] {
-  // 実際の実装では、SEO API、Similarweb API、または独自のデータベースから取得
-  const suggestions: Record<string, string[]> = {
-    'ecommerce': ['amazon.co.jp', 'rakuten.co.jp', 'yahoo.co.jp'],
-    'healthcare': ['hospitalsearch.jp', 'medical.yahoo.co.jp'],
-    'finance': ['rakuten-sec.co.jp', 'sbi-sec.co.jp'],
-    'education': ['benesse.jp', 'schoo.jp'],
+export async function suggestCompetitors(url: string, industry: string): Promise<string[]> {
+  try {
+    // 1. 外部APIでキーワードベース競合発見
+    const discoveredCompetitors = await findCompetitorsByKeywords(url, industry);
+    
+    if (discoveredCompetitors.length > 0) {
+      return discoveredCompetitors;
+    }
+    
+    // 2. フォールバック: 静的な業界別競合リスト
+    const staticSuggestions: Record<string, string[]> = {
+      'ecommerce': ['https://amazon.co.jp', 'https://rakuten.co.jp', 'https://shopping.yahoo.co.jp'],
+      'healthcare': ['https://www.hospita.jp', 'https://fdoc.jp', 'https://medical.yahoo.co.jp'],
+      'finance': ['https://www.rakuten-sec.co.jp', 'https://www.sbi-sec.co.jp', 'https://kabu.com'],
+      'education': ['https://benesse.jp', 'https://schoo.jp', 'https://www.udemy.com'],
+      'technology': ['https://qiita.com', 'https://zenn.dev', 'https://github.com'],
+      'other': ['https://www.wantedly.com', 'https://corp.freee.co.jp']
+    };
+    
+    return staticSuggestions[industry] || [];
+  } catch (error) {
+    console.error('競合サイト提案エラー:', error);
+    return [];
+  }
+}
+
+/**
+ * 同期版の競合サイト提案（既存のコンポーネント互換性のため）
+ */
+export function suggestCompetitorsSync(url: string, industry: string): string[] {
+  const staticSuggestions: Record<string, string[]> = {
+    'ecommerce': ['https://amazon.co.jp', 'https://rakuten.co.jp', 'https://shopping.yahoo.co.jp'],
+    'healthcare': ['https://www.hospita.jp', 'https://fdoc.jp'],
+    'finance': ['https://www.rakuten-sec.co.jp', 'https://www.sbi-sec.co.jp'],
+    'education': ['https://benesse.jp', 'https://schoo.jp'],
     'other': []
   };
   
-  return suggestions[industry] || [];
+  return staticSuggestions[industry] || [];
 }

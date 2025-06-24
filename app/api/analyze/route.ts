@@ -1,6 +1,7 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { analyzeUrl } from '@/lib/analyzers/url-analyzer';
 import { generateSampleData } from '@/lib/utils/sample-data';
+import { getEnhancedCompetitorAnalysis, integrateLighthouseScores } from '@/lib/analyzers/external-apis';
 
 // サーバーサイドキャッシュ（メモリ内）
 const serverCache = new Map<string, { data: any; expires: number }>();
@@ -70,7 +71,19 @@ export async function POST(request: NextRequest) {
     try {
       console.log(`解析開始: ${url}`);
       // 実際の解析を試みる
-      result = await analyzeUrl(url);
+      const basicResult = await analyzeUrl(url);
+      
+      // 外部API（Lighthouse）で解析を強化
+      console.log(`外部API統合開始: ${url}`);
+      try {
+        const { lighthouseData } = await getEnhancedCompetitorAnalysis(url);
+        result = integrateLighthouseScores(basicResult, lighthouseData);
+        console.log(`Lighthouse統合成功: ${url}`);
+      } catch (lighthouseError) {
+        console.warn('Lighthouse統合失敗、基本解析のみ使用:', lighthouseError);
+        result = basicResult;
+      }
+      
       console.log(`解析成功: ${url}`);
     } catch (analysisError) {
       console.error('実解析エラー、サンプルデータで代替:', analysisError);
