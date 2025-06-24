@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Search, Sparkles, RefreshCw, Target } from 'lucide-react';
-import { findCompetitorsByKeywords } from '@/lib/analyzers/external-apis';
+// 外部APIはサーバーエンドポイント経由で使用
 
 interface AutoCompetitorDiscoveryProps {
   targetUrl: string;
@@ -26,7 +26,20 @@ export default function AutoCompetitorDiscovery({
 
     setIsSearching(true);
     try {
-      const competitors = await findCompetitorsByKeywords(targetUrl, industry);
+      // サーバーエンドポイント経由でAPI呼び出し
+      const response = await fetch('/api/find-competitors', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ targetUrl, industry })
+      });
+      
+      if (!response.ok) {
+        throw new Error('競合発見APIの呼び出しに失敗しました');
+      }
+      
+      const data = await response.json();
+      const competitors = data.competitors || [];
+      
       setDiscoveredCompetitors(competitors);
       setLastSearchTime(new Date());
       

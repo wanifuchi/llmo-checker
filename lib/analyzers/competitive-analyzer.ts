@@ -1,5 +1,6 @@
 import { AnalysisResult, CompetitiveAnalysis, CompetitorSite, CompetitorGap, IndustryBenchmarks, CompetitiveRecommendation } from '@/lib/types';
 import { getEnhancedCompetitorAnalysis, integrateLighthouseScores, findCompetitorsByKeywords } from './external-apis';
+import { analyzeUrl } from './url-analyzer';
 
 // 業界マッピング
 const INDUSTRY_MAPPING: Record<string, string[]> = {
@@ -206,28 +207,25 @@ function getImplementationAdvice(area: string, industry: string): string {
  */
 async function analyzeCompetitorSite(url: string): Promise<AnalysisResult> {
   try {
-    // 1. 内部解析API呼び出し
-    const response = await fetch('/api/analyze', {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-      },
-      body: JSON.stringify({ url }),
-    });
-
-    if (!response.ok) {
-      throw new Error(`Failed to analyze ${url}`);
-    }
-
-    const internalAnalysis = await response.json();
+    console.log(`競合サイト解析開始: ${url}`);
+    
+    // 1. 内部解析エンジンを直接呼び出し
+    const internalAnalysis = await analyzeUrl(url);
+    console.log(`内部解析完了: ${url}, スコア: ${internalAnalysis.scores.overall}`);
     
     // 2. 外部API（Lighthouse）で強化
-    const { lighthouseData } = await getEnhancedCompetitorAnalysis(url);
-    
-    // 3. 内部解析とLighthouseデータを統合
-    const enhancedAnalysis = integrateLighthouseScores(internalAnalysis, lighthouseData);
-    
-    return enhancedAnalysis;
+    try {
+      const { lighthouseData } = await getEnhancedCompetitorAnalysis(url);
+      
+      // 3. 内部解析とLighthouseデータを統合
+      const enhancedAnalysis = integrateLighthouseScores(internalAnalysis, lighthouseData);
+      console.log(`Lighthouse統合完了: ${url}, 最終スコア: ${enhancedAnalysis.scores.overall}`);
+      
+      return enhancedAnalysis;
+    } catch (lighthouseError) {
+      console.warn(`Lighthouse統合失敗: ${url}, 内部解析のみ使用`, lighthouseError);
+      return internalAnalysis;
+    }
   } catch (error) {
     console.warn(`競合サイト ${url} の解析に失敗。フォールバックデータを使用:`, error);
     
@@ -327,33 +325,52 @@ export async function performCompetitiveAnalysis(
   targetAnalysis: AnalysisResult,
   competitorUrls: string[]
 ): Promise<CompetitiveAnalysis> {
+  console.log(`競合分析開始: ${targetUrl}, 競合数: ${competitorUrls.length}`);
+  console.log('競合URLリスト:', competitorUrls);
+  
   // ターゲットサイトもLighthouseで強化
   const enhancedTargetAnalysis = await (async () => {
     try {
+      console.log(`ターゲットサイトLighthouse強化開始: ${targetUrl}`);
       const { lighthouseData } = await getEnhancedCompetitorAnalysis(targetUrl);
-      return integrateLighthouseScores(targetAnalysis, lighthouseData);
-    } catch {
+      const enhanced = integrateLighthouseScores(targetAnalysis, lighthouseData);
+      console.log(`ターゲットサイト強化完了: ${enhanced.scores.overall}`);
+      return enhanced;
+    } catch (error) {
+      console.warn(`ターゲットサイトLighthouse強化失敗:`, error);
       return targetAnalysis; // エラー時は元の解析結果を使用
     }
   })();
   
   // 各競合URLを実際に解析（外部API統合版）
+  console.log('競合サイト解析開始...');
   const competitors: CompetitorSite[] = await Promise.all(
     competitorUrls.map(async (url, index) => {
-      const analysis = await analyzeCompetitorSite(url);
-      
-      const allScores = [enhancedTargetAnalysis.scores.overall, analysis.scores.overall];
-      
-      return {
-        url,
-        name: `競合サイト ${index + 1}`,
-        analysis,
-        marketPosition: analyzeMarketPosition(analysis.scores.overall, allScores),
-        strengths: extractStrengths(analysis),
-        weaknesses: extractWeaknesses(analysis)
-      };
+      try {
+        console.log(`競合サイト ${index + 1} 解析開始: ${url}`);
+        const analysis = await analyzeCompetitorSite(url);
+        
+        const allScores = [enhancedTargetAnalysis.scores.overall, analysis.scores.overall];
+        
+        const competitor = {
+          url,
+          name: `競合サイト ${index + 1}`,
+          analysis,
+          marketPosition: analyzeMarketPosition(analysis.scores.overall, allScores),
+          strengths: extractStrengths(analysis),
+          weaknesses: extractWeaknesses(analysis)
+        };
+        
+        console.log(`競合サイト ${index + 1} 解析完了: ${url}, スコア: ${analysis.scores.overall}`);
+        return competitor;
+      } catch (error) {
+        console.error(`競合サイト ${index + 1} 解析エラー: ${url}`, error);
+        throw error; // エラーを上位に伝播
+      }
     })
   );
+  
+  console.log(`全競合サイト解析完了. 結果数: ${competitors.length}`);
   
   // 強化されたターゲット解析を使用してギャップ分析も更新
   const gapAnalysis = performGapAnalysis(enhancedTargetAnalysis, competitors);
@@ -372,7 +389,7 @@ export async function performCompetitiveAnalysis(
   // ギャップ分析は上で実行済み
   const recommendations = generateCompetitiveRecommendations(gapAnalysis, competitors, industry);
   
-  return {
+  const result = {
     targetUrl,
     competitors,
     ranking,
@@ -380,6 +397,10 @@ export async function performCompetitiveAnalysis(
     benchmarks,
     recommendations
   };
+  
+  console.log(`競合分析完了. ランキング: ${ranking.position}/${ranking.outOf}, 推奨事項: ${recommendations.length}件`);
+  
+  return result;
 }
 
 /**

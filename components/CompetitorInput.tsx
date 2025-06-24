@@ -2,7 +2,7 @@
 
 import { useState } from 'react';
 import { Plus, X, Search, Sparkles } from 'lucide-react';
-import { suggestCompetitorsSync } from '@/lib/analyzers/competitive-analyzer';
+import { suggestCompetitorsSync } from '@/lib/analyzers/competitor-utils';
 import AutoCompetitorDiscovery from './AutoCompetitorDiscovery';
 
 interface CompetitorInputProps {
