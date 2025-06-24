@@ -16,6 +16,12 @@ export interface AnalysisResult {
     eeat: EeatAnalysis;
   };
   suggestions: Suggestion[];
+  // 外部API統合用のオプショナルプロパティ
+  isFallbackData?: boolean;
+  fallbackReason?: string;
+  fromCache?: boolean;
+  cacheHit?: boolean;
+  cacheTimeRemaining?: string;
 }
 
 // llms.txt解析結果

@@ -232,7 +232,7 @@ async function analyzeCompetitorSite(url: string): Promise<AnalysisResult> {
     console.warn(`競合サイト ${url} の解析に失敗。フォールバックデータを使用:`, error);
     
     // 解析失敗時のフォールバックデータ
-    return {
+    const fallbackResult: AnalysisResult = {
       url,
       timestamp: new Date(),
       scores: {
@@ -243,15 +243,37 @@ async function analyzeCompetitorSite(url: string): Promise<AnalysisResult> {
         eeat: 60 + Math.random() * 25
       },
       details: {
-        structuredData: { schemas: [], openGraph: [], jsonLd: [] },
-        technical: { performance: [], accessibility: [], seo: [] },
-        content: { headings: [], links: [], images: [] },
-        eeat: { expertise: [], authoritativeness: [], trustworthiness: [] }
+        llmsTxt: {
+          exists: false,
+          syntax: { valid: true, errors: [] },
+          content: { allowed: [], disallowed: [], sitemaps: [] }
+        },
+        structuredData: {
+          jsonLdCount: 0,
+          schemas: [],
+          errors: [],
+          warnings: []
+        },
+        content: {
+          headingStructure: { valid: true, issues: [] },
+          semanticHtml: { score: 70, elements: [] },
+          faqDetected: false,
+          listElements: 0,
+          summarySection: false
+        },
+        eeat: {
+          authorInfo: { exists: false, complete: false },
+          organizationInfo: { exists: false, complete: false },
+          lastUpdated: null,
+          trustSignals: []
+        }
       },
       suggestions: [],
       isFallbackData: true,
       fallbackReason: '競合サイト解析エラー'
     };
+    
+    return fallbackResult;
   }
 }
 
