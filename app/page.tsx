@@ -22,6 +22,10 @@ import CompetitiveAnalysisComponent from '@/components/CompetitiveAnalysis';
 import ApiStatusPanel from '@/components/ApiStatusPanel';
 import ScrollToResults from '@/components/ScrollToResults';
 
+// 動的レンダリングを強制（Railway環境でのSSGエラー回避）
+export const dynamic = 'force-dynamic';
+export const revalidate = 0;
+
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
   const [progress, setProgress] = useState<AnalysisProgress | null>(null);
