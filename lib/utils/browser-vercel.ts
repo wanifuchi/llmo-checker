@@ -17,7 +17,6 @@ export async function getBrowserForVercel() {
       defaultViewport: chromium.default.defaultViewport,
       executablePath,
       headless: chromium.default.headless,
-      ignoreHTTPSErrors: true,
     });
 
     console.log('Browser launched successfully');

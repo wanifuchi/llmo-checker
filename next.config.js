@@ -2,7 +2,9 @@
 const nextConfig = {
   // Vercel/Railway対応設定
   trailingSlash: false,
-  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
+  experimental: {
+    serverComponentsExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
+  },
   
   webpack: (config, { isServer }) => {
     if (!isServer) {
