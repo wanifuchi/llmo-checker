@@ -22,9 +22,7 @@ import CompetitiveAnalysisComponent from '@/components/CompetitiveAnalysis';
 import ApiStatusPanel from '@/components/ApiStatusPanel';
 import ScrollToResults from '@/components/ScrollToResults';
 
-// Railway環境でのSSGエラー回避
-export const dynamic = 'force-dynamic';
-export const revalidate = 0;
+// クライアントサイドレンダリング優先（Vercel最適化）
 
 export default function Home() {
   const [isAnalyzing, setIsAnalyzing] = useState(false);
