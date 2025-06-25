@@ -2,7 +2,7 @@
 const nextConfig = {
   // Vercel/Railway対応設定
   trailingSlash: false,
-  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min'],
+  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium'],
   
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -39,7 +39,7 @@ const nextConfig = {
         'node:http': false,
         'node:https': false,
         'puppeteer-core': false,
-        '@sparticuz/chromium-min': false,
+        '@sparticuz/chromium': false,
         puppeteer: false
       };
       
@@ -47,7 +47,7 @@ const nextConfig = {
       const webpack = require('webpack');
       config.plugins.push(
         new webpack.IgnorePlugin({
-          resourceRegExp: /^(puppeteer|puppeteer-core|@sparticuz\/chromium-min)$/,
+          resourceRegExp: /^(puppeteer|puppeteer-core|@sparticuz\/chromium)$/,
         })
       );
     }

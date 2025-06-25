@@ -1,22 +1,24 @@
+import { fetchHtmlWithVercelBrowser } from './browser-vercel';
+
 // 開発環境かどうかを判定
 const isDev = process.env.NODE_ENV === 'development';
 
 export async function getBrowser() {
-  // 本番環境（Railway/Vercel）では@sparticuz/chromium-minを動的インポート
+  // Vercel環境では専用実装を使用
+  if (process.env.VERCEL) {
+    throw new Error('Use fetchHtmlWithVercelBrowser for Vercel environment');
+  }
   
-  let executablePath;
-  let args = [];
-  
-  if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL) {
+  // Railway環境
+  if (process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL) {
     try {
-      // AWS Lambda/Vercel/Railway環境では動的インポート
       const [chromium, puppeteerCore] = await Promise.all([
-        import('@sparticuz/chromium-min'),
+        import('@sparticuz/chromium'),
         import('puppeteer-core')
       ]);
       
-      executablePath = await chromium.default.executablePath();
-      args = [...chromium.default.args];
+      const executablePath = await chromium.default.executablePath();
+      const args = [...chromium.default.args];
       
       const browser = await puppeteerCore.default.launch({
         args: [
@@ -24,11 +26,7 @@ export async function getBrowser() {
           '--no-sandbox',
           '--disable-setuid-sandbox',
           '--disable-gpu',
-          '--disable-dev-shm-usage',
-          '--disable-accelerated-2d-canvas',
-          '--disable-animations',
-          '--disable-background-timer-throttling',
-          '--font-render-hinting=none'
+          '--disable-dev-shm-usage'
         ],
         defaultViewport: { width: 1280, height: 720 },
         executablePath,
@@ -37,37 +35,38 @@ export async function getBrowser() {
       
       return browser;
     } catch (e) {
-      console.error('Chromium import failed, using fallback:', e);
-      throw new Error('Chromium not available in production environment');
+      console.error('Railway Chromium failed:', e);
+      throw new Error('Chromium not available in Railway environment');
     }
-  } else {
-    // ローカル環境では事前インストールされたChromiumを使用
-    const puppeteerCore = await import('puppeteer-core');
-    executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
-    args = ['--no-sandbox', '--disable-setuid-sandbox'];
-    
-    const browser = await puppeteerCore.default.launch({
-      args: [
-        ...args,
-        '--no-sandbox',
-        '--disable-setuid-sandbox',
-        '--disable-gpu',
-        '--disable-dev-shm-usage',
-        '--disable-accelerated-2d-canvas',
-        '--disable-animations',
-        '--disable-background-timer-throttling',
-        '--font-render-hinting=none'
-      ],
-      defaultViewport: { width: 1280, height: 720 },
-      executablePath,
-      headless: true
-    });
-    
-    return browser;
   }
+  
+  // ローカル環境
+  const puppeteerCore = await import('puppeteer-core');
+  const executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
+  
+  const browser = await puppeteerCore.default.launch({
+    args: [
+      '--no-sandbox',
+      '--disable-setuid-sandbox',
+      '--disable-gpu',
+      '--disable-dev-shm-usage'
+    ],
+    defaultViewport: { width: 1280, height: 720 },
+    executablePath,
+    headless: true
+  });
+  
+  return browser;
 }
 
 export async function fetchHtmlWithBrowser(url: string): Promise<string> {
+  // Vercel環境では専用実装を使用
+  if (process.env.VERCEL) {
+    console.log('Using Vercel-specific browser implementation');
+    return fetchHtmlWithVercelBrowser(url);
+  }
+  
+  // Railway環境やローカル環境
   let browser: any = null;
   
   try {
@@ -78,7 +77,7 @@ export async function fetchHtmlWithBrowser(url: string): Promise<string> {
     const page = await browser.newPage();
     console.log('新しいページ作成成功');
     
-    // ナビゲーションタイムアウトを30秒に設定（Vercelの制限を考慮）
+    // ナビゲーションタイムアウトを30秒に設定
     page.setDefaultNavigationTimeout(30000);
     
     // 不要なリソースをブロックしてパフォーマンスを向上
