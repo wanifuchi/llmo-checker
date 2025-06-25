@@ -12,12 +12,10 @@ export async function getBrowser() {
   if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL) {
     try {
       // AWS Lambda/Vercel/Railway環境では動的インポート
-      const chromium = await import('@sparticuz/chromium-min').then(mod => mod.default);
+      const chromium = await import('@sparticuz/chromium-min');
       
-      executablePath = await chromium.executablePath(
-        'https://github.com/Sparticuz/chromium/releases/download/v126.0.0/chromium-v126.0.0-pack.tar'
-      );
-      args = [...chromium.args];
+      executablePath = await chromium.default.executablePath();
+      args = [...chromium.default.args];
     } catch (e) {
       console.error('Chromium import failed, using fallback:', e);
       throw new Error('Chromium not available in production environment');

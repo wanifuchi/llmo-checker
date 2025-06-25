@@ -1,7 +1,12 @@
 {
   "functions": {
     "app/api/analyze/route.ts": {
-      "maxDuration": 60
+      "maxDuration": 60,
+      "memory": 1024
+    },
+    "app/api/competitive-analysis/route.ts": {
+      "maxDuration": 60,
+      "memory": 1024
     }
   },
   "env": {
