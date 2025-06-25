@@ -81,12 +81,37 @@ export default function Home() {
       return 'technology';
     }
     
-    // Funeral keywords
+    // Funeral & Ending keywords (priority check)
     if (content.includes('funeral') || content.includes('葬儀') || content.includes('葬式') ||
         content.includes('告別式') || content.includes('memorial') || content.includes('斎場') ||
-        content.includes('霊園') || content.includes('cemetery') || content.includes('ending') ||
-        content.includes('セレモニー') || content.includes('供養')) {
+        content.includes('セレモニー') || content.includes('供養') || content.includes('弔問') ||
+        content.includes('通夜') || content.includes('法要') || content.includes('法事') ||
+        content.includes('追善') || content.includes('火葬') || content.includes('納骨')) {
       return 'funeral';
+    }
+    
+    // Cemetery & Grave keywords
+    if (content.includes('cemetery') || content.includes('霊園') || content.includes('墓地') ||
+        content.includes('お墓') || content.includes('墓石') || content.includes('石材') ||
+        content.includes('墓参り') || content.includes('納骨堂') || content.includes('永代供養') ||
+        content.includes('合祀墓') || content.includes('樹木葬') || content.includes('散骨')) {
+      return 'cemetery';
+    }
+    
+    // Buddhist altar & ritual items keywords  
+    if (content.includes('仏壇') || content.includes('仏具') || content.includes('位牌') ||
+        content.includes('数珠') || content.includes('線香') || content.includes('ろうそく') ||
+        content.includes('花立') || content.includes('香炉') || content.includes('木魚') ||
+        content.includes('りん') || content.includes('経本') || content.includes('念珠')) {
+      return 'buddhist';
+    }
+    
+    // Ending industry keywords
+    if (content.includes('ending') || content.includes('エンディング') || content.includes('終活') ||
+        content.includes('生前整理') || content.includes('遺品整理') || content.includes('相続') ||
+        content.includes('遺言') || content.includes('見守り') || content.includes('介護') ||
+        content.includes('老人ホーム') || content.includes('シニア') || content.includes('高齢者')) {
+      return 'ending';
     }
     
     return 'other';

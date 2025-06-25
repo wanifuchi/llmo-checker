@@ -127,14 +127,18 @@ export default function CompetitorInput({ onCompetitorsChange, targetUrl, indust
           <div>
             <div className="flex items-center justify-between mb-2">
               <label className="block text-sm font-medium text-gray-700">
-                業界別推奨サイト
+                {industry === 'funeral' && '葬儀業界推奨サイト'}
+                {industry === 'ending' && 'エンディング業界推奨サイト'}
+                {industry === 'cemetery' && '霊園・墓石業界推奨サイト'}
+                {industry === 'buddhist' && '仏壇・仏具業界推奨サイト'}
+                {!['funeral', 'ending', 'cemetery', 'buddhist'].includes(industry) && '業界別推奨サイト'}
               </label>
               <button
                 onClick={() => setShowSuggestions(!showSuggestions)}
                 className="flex items-center text-xs text-gray-600 hover:text-gray-800"
               >
                 <Sparkles className="h-3 w-3 mr-1" />
-                静的リスト
+                {industry === 'other' ? '汎用リスト' : '業界特化リスト'}
               </button>
             </div>
             

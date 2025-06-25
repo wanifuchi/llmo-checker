@@ -121,7 +121,10 @@ function generateSearchQueries(targetUrl: string, industry: string): string[] {
     'finance': ['金融 サービス', '投資 証券', 'ローン 銀行'],
     'education': ['オンライン学習', '教育 スクール', 'eラーニング'],
     'technology': ['IT サービス', 'ソフトウェア開発', 'アプリ 開発'],
-    'funeral': ['葬儀社', '葬式 サービス', '斎場 葬儀'],
+    'funeral': ['葬儀社', '葬式 サービス', '斎場 葬儀', '家族葬', '一般葬'],
+    'ending': ['終活 サービス', 'エンディング', '生前整理', '相続 手続き', 'シニア サポート'],
+    'cemetery': ['霊園', '墓地 販売', '永代供養', '納骨堂', '樹木葬'],
+    'buddhist': ['仏壇 販売', '仏具 通販', '位牌 制作', '数珠 専門店', '線香 販売'],
     'other': ['ビジネス サービス', '企業 サイト', 'サービス 比較']
   };
   
@@ -174,6 +177,27 @@ function getKnownCompetitors(query: string): SearchResult[] {
     'ヘルスケア': [
       { title: '病院検索ホスピタ', url: 'https://www.hospita.jp', description: '病院検索サイト', position: 1 },
       { title: 'EPARKクリニック・病院', url: 'https://fdoc.jp', description: 'クリニック予約', position: 2 }
+    ],
+    '葬儀社': [
+      { title: '小さなお葬式', url: 'https://www.osohshiki.jp', description: '低価格葬儀サービス', position: 1 },
+      { title: 'イオンのお葬式', url: 'https://www.sousai-sougi.com', description: 'イオングループ葬儀', position: 2 },
+      { title: 'ティア', url: 'https://www.tear.co.jp', description: '愛知県大手葬儀社', position: 3 },
+      { title: '公益社', url: 'https://www.koekisha.co.jp', description: '関西大手葬儀社', position: 4 }
+    ],
+    '終活 サービス': [
+      { title: 'ライフドット', url: 'https://www.lifedot.jp', description: '終活総合サイト', position: 1 },
+      { title: 'エンディングノート', url: 'https://www.ending-note.com', description: 'エンディングノート配布', position: 2 },
+      { title: 'ミライセルフ', url: 'https://www.miraiself.com', description: '終活サポート', position: 3 }
+    ],
+    '霊園': [
+      { title: 'いいお墓', url: 'https://www.e-ohaka.com', description: '霊園・墓地検索', position: 1 },
+      { title: '墓石・霊園検索', url: 'https://www.boseki.net', description: '全国霊園検索', position: 2 },
+      { title: 'お墓探しならお墓さがし', url: 'https://www.ohaka-sagashi.com', description: '霊園・墓地紹介', position: 3 }
+    ],
+    '仏壇 販売': [
+      { title: '仏壇・仏具の滝田商店', url: 'https://www.takita-corp.co.jp', description: '仏壇仏具専門店', position: 1 },
+      { title: '仏壇仏具のメモリアルアート', url: 'https://www.memorial-art.jp', description: '現代仏壇専門', position: 2 },
+      { title: 'はせがわ', url: 'https://www.hasegawa-gb.co.jp', description: '全国展開仏壇店', position: 3 }
     ]
   };
   
