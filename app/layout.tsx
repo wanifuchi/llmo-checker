@@ -9,9 +9,9 @@ export const metadata: Metadata = {
   description: 'ウェブサイトのLLMO（Large Language Model Optimization）最適化状況を分析します',
 }
 
-// 動的レンダリングを強制（Railway環境でのSSGエラー回避）
+// Railway環境でのSSGエラー回避
 export const dynamic = 'force-dynamic';
-export const revalidate = false;
+export const revalidate = 0;
 
 export default function RootLayout({
   children,
