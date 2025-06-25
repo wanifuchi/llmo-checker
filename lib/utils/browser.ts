@@ -1,5 +1,3 @@
-import puppeteerCore from 'puppeteer-core';
-
 // 開発環境かどうかを判定
 const isDev = process.env.NODE_ENV === 'development';
 
@@ -12,38 +10,61 @@ export async function getBrowser() {
   if (process.env.AWS_LAMBDA_FUNCTION_VERSION || process.env.VERCEL || process.env.RAILWAY_ENVIRONMENT || process.env.RAILWAY_STATIC_URL) {
     try {
       // AWS Lambda/Vercel/Railway環境では動的インポート
-      const chromium = await import('@sparticuz/chromium-min');
+      const [chromium, puppeteerCore] = await Promise.all([
+        import('@sparticuz/chromium-min'),
+        import('puppeteer-core')
+      ]);
       
       executablePath = await chromium.default.executablePath();
       args = [...chromium.default.args];
+      
+      const browser = await puppeteerCore.default.launch({
+        args: [
+          ...args,
+          '--no-sandbox',
+          '--disable-setuid-sandbox',
+          '--disable-gpu',
+          '--disable-dev-shm-usage',
+          '--disable-accelerated-2d-canvas',
+          '--disable-animations',
+          '--disable-background-timer-throttling',
+          '--font-render-hinting=none'
+        ],
+        defaultViewport: { width: 1280, height: 720 },
+        executablePath,
+        headless: true
+      });
+      
+      return browser;
     } catch (e) {
       console.error('Chromium import failed, using fallback:', e);
       throw new Error('Chromium not available in production environment');
     }
   } else {
     // ローカル環境では事前インストールされたChromiumを使用
+    const puppeteerCore = await import('puppeteer-core');
     executablePath = '/Applications/Google Chrome.app/Contents/MacOS/Google Chrome';
     args = ['--no-sandbox', '--disable-setuid-sandbox'];
+    
+    const browser = await puppeteerCore.default.launch({
+      args: [
+        ...args,
+        '--no-sandbox',
+        '--disable-setuid-sandbox',
+        '--disable-gpu',
+        '--disable-dev-shm-usage',
+        '--disable-accelerated-2d-canvas',
+        '--disable-animations',
+        '--disable-background-timer-throttling',
+        '--font-render-hinting=none'
+      ],
+      defaultViewport: { width: 1280, height: 720 },
+      executablePath,
+      headless: true
+    });
+    
+    return browser;
   }
-  
-  const browser = await puppeteerCore.launch({
-    args: [
-      ...args,
-      '--no-sandbox',
-      '--disable-setuid-sandbox',
-      '--disable-gpu',
-      '--disable-dev-shm-usage',
-      '--disable-accelerated-2d-canvas',
-      '--disable-animations',
-      '--disable-background-timer-throttling',
-      '--font-render-hinting=none'
-    ],
-    defaultViewport: { width: 1280, height: 720 },
-    executablePath,
-    headless: true
-  });
-  
-  return browser;
 }
 
 export async function fetchHtmlWithBrowser(url: string): Promise<string> {

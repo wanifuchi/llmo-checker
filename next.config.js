@@ -1,9 +1,8 @@
 /** @type {import('next').NextConfig} */
 const nextConfig = {
-  // Puppeteer関連のサーバーサイド処理設定
-  
-  // Railway対応設定
+  // Vercel/Railway対応設定
   trailingSlash: false,
+  serverExternalPackages: ['puppeteer-core', '@sparticuz/chromium-min'],
   
   webpack: (config, { isServer }) => {
     if (!isServer) {
@@ -51,11 +50,6 @@ const nextConfig = {
           resourceRegExp: /^(puppeteer|puppeteer-core|@sparticuz\/chromium-min)$/,
         })
       );
-    }
-    
-    // サーバーサイドでもPuppeteer関連を外部依存として処理
-    if (isServer) {
-      config.externals.push('puppeteer-core', '@sparticuz/chromium-min');
     }
     
     return config;

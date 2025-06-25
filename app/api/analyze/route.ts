@@ -88,6 +88,15 @@ export async function POST(request: NextRequest) {
     } catch (analysisError) {
       console.error('実解析エラー、サンプルデータで代替:', analysisError);
       console.error('エラー詳細:', analysisError instanceof Error ? analysisError.stack : analysisError);
+      console.error('エラータイプ:', typeof analysisError);
+      console.error('エラー名:', analysisError instanceof Error ? analysisError.name : 'Unknown');
+      console.error('エラーメッセージ:', analysisError instanceof Error ? analysisError.message : String(analysisError));
+      
+      // Vercel環境変数の確認
+      console.log('VERCEL環境変数:', process.env.VERCEL ? 'true' : 'false');
+      console.log('NODE_ENV:', process.env.NODE_ENV);
+      console.log('Lambda関数環境:', process.env.AWS_LAMBDA_FUNCTION_VERSION ? 'true' : 'false');
+      
       isUsingFallback = true;
       // 解析に失敗した場合はサンプルデータで代替
       result = generateSampleData(url);
@@ -96,6 +105,13 @@ export async function POST(request: NextRequest) {
       (result as any).isFallbackData = true;
       (result as any).fallbackReason = analysisError instanceof Error ? analysisError.message : '不明なエラー';
       (result as any).originalUrl = url;
+      (result as any).debugInfo = {
+        errorType: typeof analysisError,
+        errorName: analysisError instanceof Error ? analysisError.name : 'Unknown',
+        isVercel: !!process.env.VERCEL,
+        nodeEnv: process.env.NODE_ENV,
+        timestamp: new Date().toISOString()
+      };
     }
 
     // 成功した結果をキャッシュに保存（フォールバックデータはキャッシュしない）
