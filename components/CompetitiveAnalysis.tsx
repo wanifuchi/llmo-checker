@@ -155,30 +155,115 @@ export default function CompetitiveAnalysisComponent({ analysis, targetAnalysis 
                 {Object.entries(analysis.benchmarks.averageScores).map(([area, score]) => {
                   if (area === 'overall') return null;
                   const topScore = analysis.benchmarks.topPerformerScores[area as keyof typeof analysis.benchmarks.topPerformerScores];
+                  const currentScore = targetAnalysis?.scores?.[area as keyof typeof targetAnalysis.scores] || 70;
                   
                   return (
-                    <div key={area} className="flex items-center justify-between">
-                      <span className="text-sm font-medium text-gray-700 capitalize">
-                        {area === 'structuredData' ? '構造化データ' : 
-                         area === 'eeat' ? 'E-E-A-T' : 
-                         area === 'technical' ? '技術的' : 'コンテンツ'}
-                      </span>
-                      <div className="flex items-center space-x-2">
-                        <div className="w-32 bg-gray-200 rounded-full h-2">
+                    <div key={area} className="space-y-2">
+                      <div className="flex items-center justify-between">
+                        <span className="text-sm font-medium text-gray-700">
+                          {area === 'structuredData' ? '構造化データ' : 
+                           area === 'eeat' ? 'E-E-A-T' : 
+                           area === 'technical' ? '技術的' : 'コンテンツ'}
+                        </span>
+                        <div className="flex items-center space-x-2">
+                          <span className="text-xs text-gray-500 w-16">あなた: {typeof currentScore === 'number' ? currentScore.toFixed(0) : currentScore}</span>
+                          <span className="text-xs text-gray-500 w-16">平均: {score}</span>
+                          <span className="text-xs text-gray-500 w-16">トップ: {topScore}</span>
+                        </div>
+                      </div>
+                      
+                      <div className="relative">
+                        <div className="w-full bg-gray-200 rounded-full h-3">
+                          {/* 業界平均 */}
                           <div 
-                            className="bg-blue-600 h-2 rounded-full" 
+                            className="bg-orange-400 h-3 rounded-full absolute" 
                             style={{ width: `${score}%` }}
                           />
+                          {/* トップパフォーマー */}
+                          <div 
+                            className="bg-green-500 h-3 rounded-full absolute" 
+                            style={{ width: `${topScore}%` }}
+                          />
+                          {/* あなたのサイト */}
+                          <div 
+                            className="bg-blue-600 h-3 rounded-full absolute border-2 border-white" 
+                            style={{ width: `${typeof currentScore === 'number' ? currentScore : parseFloat(currentScore)}%` }}
+                          />
                         </div>
-                        <span className="text-sm text-gray-600 w-12">{score}</span>
-                        <span className="text-xs text-gray-500">
-                          (トップ: {topScore})
-                        </span>
+                        
+                        {/* レジェンド */}
+                        <div className="flex items-center justify-between mt-1 text-xs">
+                          <div className="flex items-center space-x-3">
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 bg-blue-600 rounded-full mr-1"></div>
+                              <span>あなた</span>
+                            </div>
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 bg-orange-400 rounded-full mr-1"></div>
+                              <span>業界平均</span>
+                            </div>
+                            <div className="flex items-center">
+                              <div className="w-3 h-3 bg-green-500 rounded-full mr-1"></div>
+                              <span>トップ</span>
+                            </div>
+                          </div>
+                          
+                          {/* パーセンタイル表示 */}
+                          <div className="text-gray-500">
+                            {typeof currentScore === 'number' && currentScore >= score ? 
+                              `業界平均以上` : 
+                              `平均より${(score - (typeof currentScore === 'number' ? currentScore : parseFloat(currentScore))).toFixed(0)}ポイント低い`
+                            }
+                          </div>
+                        </div>
                       </div>
                     </div>
                   );
                 })}
               </div>
+              
+              {/* 業界特有のトレンド情報 */}
+              {analysis.benchmarks.emergingTrends && analysis.benchmarks.emergingTrends.length > 0 && (
+                <div className="mt-4 p-4 bg-indigo-50 rounded-lg border border-indigo-200">
+                  <h5 className="font-medium text-indigo-900 mb-2">📈 業界トレンド</h5>
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-2">
+                    {analysis.benchmarks.emergingTrends.map((trend, i) => (
+                      <div key={i} className="flex items-center text-sm text-indigo-700">
+                        <span className="mr-2">•</span>
+                        <span>{trend}</span>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+              
+              {/* 詳細ベンチマーク情報 */}
+              {analysis.benchmarks.detailedBenchmarks && (
+                <div className="mt-4 grid grid-cols-1 md:grid-cols-2 gap-4">
+                  {/* ページ速度ベンチマーク */}
+                  {analysis.benchmarks.detailedBenchmarks.pageSpeed && (
+                    <div className="p-3 bg-yellow-50 rounded border border-yellow-200">
+                      <h6 className="font-medium text-yellow-800 mb-2">🚀 ページ速度基準</h6>
+                      <div className="text-sm text-yellow-700 space-y-1">
+                        <div>モバイル: {analysis.benchmarks.detailedBenchmarks.pageSpeed.mobile}秒以内</div>
+                        <div>デスクトップ: {analysis.benchmarks.detailedBenchmarks.pageSpeed.desktop}秒以内</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* Core Web Vitals */}
+                  {analysis.benchmarks.detailedBenchmarks.coreWebVitals && (
+                    <div className="p-3 bg-green-50 rounded border border-green-200">
+                      <h6 className="font-medium text-green-800 mb-2">🎯 Core Web Vitals</h6>
+                      <div className="text-sm text-green-700 space-y-1">
+                        <div>LCP: {analysis.benchmarks.detailedBenchmarks.coreWebVitals.lcp}ms以内</div>
+                        <div>FID: {analysis.benchmarks.detailedBenchmarks.coreWebVitals.fid}ms以内</div>
+                        <div>CLS: {analysis.benchmarks.detailedBenchmarks.coreWebVitals.cls}以内</div>
+                      </div>
+                    </div>
+                  )}
+                </div>
+              )}
             </div>
           </div>
         )}
@@ -195,6 +280,9 @@ export default function CompetitiveAnalysisComponent({ analysis, targetAnalysis 
             <h3 className="text-xl font-semibold text-gray-900">
               競合サイト分析 ({analysis.competitors.length}サイト)
             </h3>
+            <span className="ml-3 px-2 py-1 text-xs bg-blue-100 text-blue-800 rounded-full">
+              業界: {analysis.benchmarks.industry}
+            </span>
           </div>
           {expandedSections.has('competitors') ? 
             <ChevronUp className="h-5 w-5 text-gray-400" /> : 
@@ -308,23 +396,49 @@ export default function CompetitiveAnalysisComponent({ analysis, targetAnalysis 
                     </div>
                   </div>
                   
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
-                    <div>
-                      <div className="font-medium text-green-700 mb-1">強み</div>
-                      <ul className="list-disc list-inside text-gray-600 space-y-1">
-                        {competitor.strengths.map((strength, i) => (
-                          <li key={i}>{strength}</li>
-                        ))}
-                      </ul>
+                  <div className="space-y-4">
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      <div>
+                        <div className="font-medium text-green-700 mb-1">強み</div>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                          {competitor.strengths.map((strength, i) => (
+                            <li key={i}>{strength}</li>
+                          ))}
+                        </ul>
+                      </div>
+                      <div>
+                        <div className="font-medium text-red-700 mb-1">弱み</div>
+                        <ul className="list-disc list-inside text-gray-600 space-y-1">
+                          {competitor.weaknesses.map((weakness, i) => (
+                            <li key={i}>{weakness}</li>
+                          ))}
+                        </ul>
+                      </div>
                     </div>
-                    <div>
-                      <div className="font-medium text-red-700 mb-1">弱み</div>
-                      <ul className="list-disc list-inside text-gray-600 space-y-1">
-                        {competitor.weaknesses.map((weakness, i) => (
-                          <li key={i}>{weakness}</li>
-                        ))}
-                      </ul>
-                    </div>
+                    
+                    {/* ユニーク機能と不足機能 */}
+                    {(competitor.uniqueFeatures && competitor.uniqueFeatures.length > 0) && (
+                      <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                        <div>
+                          <div className="font-medium text-blue-700 mb-1">✨ 独自機能</div>
+                          <ul className="list-disc list-inside text-gray-600 space-y-1">
+                            {competitor.uniqueFeatures.map((feature, i) => (
+                              <li key={i}>{feature}</li>
+                            ))}
+                          </ul>
+                        </div>
+                        {competitor.missingFeatures && competitor.missingFeatures.length > 0 && (
+                          <div>
+                            <div className="font-medium text-orange-700 mb-1">⚠️ 不足機能</div>
+                            <ul className="list-disc list-inside text-gray-600 space-y-1">
+                              {competitor.missingFeatures.slice(0, 3).map((missing, i) => (
+                                <li key={i}>{missing}</li>
+                              ))}
+                            </ul>
+                          </div>
+                        )}
+                      </div>
+                    )}
                   </div>
                 </div>
               ))}
@@ -393,21 +507,54 @@ export default function CompetitiveAnalysisComponent({ analysis, targetAnalysis 
                   </div>
                 </div>
                 
-                <div className="mt-3 flex items-center justify-between text-xs">
-                  <span className={`px-2 py-1 rounded-full ${
-                    gap.impact === 'high' ? 'bg-red-100 text-red-800' :
-                    gap.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    インパクト: {gap.impact === 'high' ? '高' : gap.impact === 'medium' ? '中' : '低'}
-                  </span>
-                  <span className={`px-2 py-1 rounded-full ${
-                    gap.effort === 'high' ? 'bg-red-100 text-red-800' :
-                    gap.effort === 'medium' ? 'bg-yellow-100 text-yellow-800' :
-                    'bg-green-100 text-green-800'
-                  }`}>
-                    工数: {gap.effort === 'high' ? '高' : gap.effort === 'medium' ? '中' : '低'}
-                  </span>
+                <div className="mt-3 space-y-3">
+                  <div className="flex items-center justify-between text-xs">
+                    <span className={`px-2 py-1 rounded-full ${
+                      gap.impact === 'high' ? 'bg-red-100 text-red-800' :
+                      gap.impact === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      インパクト: {gap.impact === 'high' ? '高' : gap.impact === 'medium' ? '中' : '低'}
+                    </span>
+                    <span className={`px-2 py-1 rounded-full ${
+                      gap.effort === 'high' ? 'bg-red-100 text-red-800' :
+                      gap.effort === 'medium' ? 'bg-yellow-100 text-yellow-800' :
+                      'bg-green-100 text-green-800'
+                    }`}>
+                      工数: {gap.effort === 'high' ? '高' : gap.effort === 'medium' ? '中' : '低'}
+                    </span>
+                    {gap.details?.catchUpTime && (
+                      <span className="px-2 py-1 rounded-full bg-purple-100 text-purple-800">
+                        期間: {gap.details.catchUpTime}
+                      </span>
+                    )}
+                  </div>
+                  
+                  {/* クイックウィンと必要リソース */}
+                  {gap.details && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-3 text-xs">
+                      {gap.details.quickWins && gap.details.quickWins.length > 0 && (
+                        <div className="bg-green-50 p-2 rounded border border-green-200">
+                          <div className="font-medium text-green-800 mb-1">⚡ クイックウィン</div>
+                          <ul className="text-green-700 space-y-1">
+                            {gap.details.quickWins.slice(0, 2).map((win, i) => (
+                              <li key={i} className="text-xs">• {win}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {gap.details.requiredResources && gap.details.requiredResources.length > 0 && (
+                        <div className="bg-blue-50 p-2 rounded border border-blue-200">
+                          <div className="font-medium text-blue-800 mb-1">🛠️ 必要リソース</div>
+                          <ul className="text-blue-700 space-y-1">
+                            {gap.details.requiredResources.slice(0, 2).map((resource, i) => (
+                              <li key={i} className="text-xs">• {resource}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
               </div>
             ))}
@@ -462,30 +609,108 @@ export default function CompetitiveAnalysisComponent({ analysis, targetAnalysis 
                   </div>
                 </div>
                 
-                <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
-                  <div className="text-center p-2 bg-blue-50 rounded">
-                    <div className="font-medium text-blue-600">
-                      +{rec.expectedImpact.scoreImprovement.toFixed(1)}pt
+                <div className="space-y-4">
+                  <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                    <div className="text-center p-2 bg-blue-50 rounded">
+                      <div className="font-medium text-blue-600">
+                        +{rec.expectedImpact.scoreImprovement.toFixed(1)}pt
+                      </div>
+                      <div className="text-xs text-gray-600">スコア向上</div>
                     </div>
-                    <div className="text-xs text-gray-600">スコア向上</div>
-                  </div>
-                  <div className="text-center p-2 bg-green-50 rounded">
-                    <div className="font-medium text-green-600">
-                      +{rec.expectedImpact.rankingImprovement}位
+                    <div className="text-center p-2 bg-green-50 rounded">
+                      <div className="font-medium text-green-600">
+                        +{rec.expectedImpact.rankingImprovement}位
+                      </div>
+                      <div className="text-xs text-gray-600">順位向上</div>
                     </div>
-                    <div className="text-xs text-gray-600">順位向上</div>
-                  </div>
-                  <div className="text-center p-2 bg-purple-50 rounded">
-                    <div className="font-medium text-purple-600">
-                      {rec.expectedImpact.timeToImplement}
+                    <div className="text-center p-2 bg-purple-50 rounded">
+                      <div className="font-medium text-purple-600">
+                        {rec.expectedImpact.timeToImplement}
+                      </div>
+                      <div className="text-xs text-gray-600">実装期間</div>
                     </div>
-                    <div className="text-xs text-gray-600">実装期間</div>
                   </div>
+                  
+                  {/* ROI詳細 */}
+                  {rec.roi.investmentRequired && rec.roi.yearlyBenefit && (
+                    <div className="grid grid-cols-1 md:grid-cols-3 gap-4 text-sm">
+                      <div className="text-center p-2 bg-orange-50 rounded">
+                        <div className="font-medium text-orange-600">
+                          {rec.roi.investmentRequired}万円
+                        </div>
+                        <div className="text-xs text-gray-600">初期投資</div>
+                      </div>
+                      <div className="text-center p-2 bg-green-50 rounded">
+                        <div className="font-medium text-green-600">
+                          {rec.roi.yearlyBenefit}万円
+                        </div>
+                        <div className="text-xs text-gray-600">年間効果</div>
+                      </div>
+                      <div className="text-center p-2 bg-indigo-50 rounded">
+                        <div className="font-medium text-indigo-600">
+                          {rec.roi.paybackPeriod}
+                        </div>
+                        <div className="text-xs text-gray-600">回収期間</div>
+                      </div>
+                    </div>
+                  )}
+                  
+                  {/* クイックウィンとKPI */}
+                  {(rec.quickWins || rec.kpis) && (
+                    <div className="grid grid-cols-1 md:grid-cols-2 gap-4 text-sm">
+                      {rec.quickWins && rec.quickWins.length > 0 && (
+                        <div className="bg-yellow-50 p-3 rounded border border-yellow-200">
+                          <div className="font-medium text-yellow-800 mb-2">⚡ すぐできること</div>
+                          <ul className="text-yellow-700 space-y-1">
+                            {rec.quickWins.slice(0, 3).map((win, i) => (
+                              <li key={i} className="text-xs">• {win}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                      {rec.kpis && rec.kpis.length > 0 && (
+                        <div className="bg-indigo-50 p-3 rounded border border-indigo-200">
+                          <div className="font-medium text-indigo-800 mb-2">📊 成果指標（KPI）</div>
+                          <ul className="text-indigo-700 space-y-1">
+                            {rec.kpis.slice(0, 3).map((kpi, i) => (
+                              <li key={i} className="text-xs">• {kpi}</li>
+                            ))}
+                          </ul>
+                        </div>
+                      )}
+                    </div>
+                  )}
                 </div>
                 
-                <div className="mt-3 text-sm text-gray-700">
-                  <div className="font-medium mb-1">実装方法:</div>
-                  <p>{rec.implementation}</p>
+                <div className="mt-3 space-y-3 text-sm text-gray-700">
+                  <div>
+                    <div className="font-medium mb-1">実装方法:</div>
+                    <p className="whitespace-pre-line">{rec.implementation}</p>
+                  </div>
+                  
+                  {/* 詳細な実装ステップ */}
+                  {rec.implementationSteps && rec.implementationSteps.length > 0 && (
+                    <div>
+                      <div className="font-medium mb-2">📝 実装ステップ:</div>
+                      <ol className="list-decimal list-inside space-y-1 text-xs ml-2">
+                        {rec.implementationSteps.map((step, i) => (
+                          <li key={i} className="leading-relaxed">{step}</li>
+                        ))}
+                      </ol>
+                    </div>
+                  )}
+                  
+                  {/* 成功事例 */}
+                  {rec.successExamples && rec.successExamples.length > 0 && (
+                    <div className="bg-green-50 p-3 rounded border border-green-200">
+                      <div className="font-medium text-green-800 mb-2">🏆 成功事例</div>
+                      <ul className="text-green-700 space-y-1">
+                        {rec.successExamples.map((example, i) => (
+                          <li key={i} className="text-xs">• {example}</li>
+                        ))}
+                      </ul>
+                    </div>
+                  )}
                 </div>
               </div>
             ))}

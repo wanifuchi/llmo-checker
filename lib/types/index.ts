@@ -129,16 +129,31 @@ export interface CompetitorSite {
   marketPosition: 'leader' | 'challenger' | 'follower';
   strengths: string[];
   weaknesses: string[];
+  // 詳細な分析情報
+  uniqueFeatures?: string[];
+  missingFeatures?: string[];
+  // 業界別特化情報
+  industrySpecificStrengths?: string[];
+  industrySpecificWeaknesses?: string[];
 }
 
 export interface CompetitorGap {
-  area: 'technical' | 'content' | 'structuredData' | 'eeat';
+  area: 'technical' | 'content' | 'structuredData' | 'eeat' | 'customerSupport' | 'priceTransparency' | 'localSEO' | 'mobileOptimization' | 'security' | 'accessibility';
   currentScore: number;
   competitorAverage: number;
   topCompetitorScore: number;
   gap: number;
   impact: 'high' | 'medium' | 'low';
   effort: 'low' | 'medium' | 'high';
+  // 詳細なギャップ分析情報
+  details?: {
+    percentileBehind: number;
+    catchUpTime: string;
+    requiredResources: string[];
+    quickWins: string[];
+    industryBenchmark?: number;
+    marketPosition?: 'leading' | 'competitive' | 'lagging';
+  };
 }
 
 export interface IndustryBenchmarks {
@@ -159,6 +174,36 @@ export interface IndustryBenchmarks {
   };
   commonFeatures: string[];
   emergingTrends: string[];
+  // 詳細なベンチマーク情報
+  detailedBenchmarks?: {
+    pageSpeed?: { mobile: number; desktop: number };
+    coreWebVitals?: { lcp: number; fid: number; cls: number };
+    // 業界固有のベンチマーク
+    serviceTransparency?: string[];
+    customerSupport?: string[];
+    localSEO?: string[];
+    contentFeatures?: string[];
+    trustIndicators?: string[];
+    compliance?: string[];
+    userTrust?: string[];
+    security?: string[];
+    regulatoryCompliance?: string[];
+    serviceRange?: string[];
+    expertiseDisplay?: string[];
+    userEngagement?: string[];
+    facilityInfo?: string[];
+    priceTransparency?: string[];
+    visitorSupport?: string[];
+    productDisplay?: string[];
+    culturalRespect?: string[];
+    customerService?: string[];
+    basicOptimization?: string[];
+    userExperience?: string[];
+    contentStrategy?: string[];
+    // 追加のベンチマーク
+    conversionOptimization?: string[];
+    contentQuality?: string[];
+  };
 }
 
 export interface CompetitiveRecommendation {
@@ -172,6 +217,8 @@ export interface CompetitiveRecommendation {
     scoreImprovement: number;
     rankingImprovement: number;
     timeToImplement: string;
+    // 業界固有の期待成果
+    [key: string]: any;
   };
   implementation: string;
   codeExample?: string;
@@ -179,5 +226,23 @@ export interface CompetitiveRecommendation {
     effort: number; // 1-10 scale
     impact: number; // 1-10 scale
     score: number; // impact/effort ratio
+    // 詳細なROI分析
+    investmentRequired?: number;
+    paybackPeriod?: string;
+    yearlyBenefit?: number;
+  };
+  // 詳細な実装情報
+  implementationSteps?: string[];
+  requiredResources?: string[];
+  quickWins?: string[];
+  successExamples?: string[];
+  kpis?: string[];
+  risks?: string[];
+  dependencies?: string[];
+  timeline?: {
+    planning: string;
+    development: string;
+    testing: string;
+    deployment: string;
   };
 }

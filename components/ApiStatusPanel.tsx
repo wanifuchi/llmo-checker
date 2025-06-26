@@ -4,10 +4,13 @@ import { useState, useEffect } from 'react';
 import { Settings, CheckCircle, XCircle, AlertTriangle, Info } from 'lucide-react';
 import { getApiDiagnostics, getConfigSummary } from '@/lib/config/external-apis';
 
+type ApiDiagnostics = ReturnType<typeof getApiDiagnostics>;
+type ConfigSummary = ReturnType<typeof getConfigSummary>;
+
 export default function ApiStatusPanel() {
   const [isExpanded, setIsExpanded] = useState(false);
-  const [diagnostics, setDiagnostics] = useState<any>(null);
-  const [summary, setSummary] = useState<any>(null);
+  const [diagnostics, setDiagnostics] = useState<ApiDiagnostics | null>(null);
+  const [summary, setSummary] = useState<ConfigSummary | null>(null);
 
   useEffect(() => {
     // APIエンドポイントから設定情報を取得

@@ -60,3 +60,9 @@ global.IntersectionObserver = class IntersectionObserver {
   observe() {}
   unobserve() {}
 }
+
+// Mock window.scrollTo
+global.scrollTo = jest.fn()
+
+// Mock window.alert
+global.alert = jest.fn()
