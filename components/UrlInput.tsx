@@ -181,7 +181,7 @@ export default function UrlInput({ onAnalyze, isAnalyzing = false, initialUrl = 
               </form>
 
               {/* Example URLs */}
-              <div className="mt-8 space-y-3">
+              <!--<div className="mt-8 space-y-3">
                 <p className="text-sm font-medium text-muted-foreground">
                   サンプルサイトで試す
                 </p>
@@ -197,7 +197,7 @@ export default function UrlInput({ onAnalyze, isAnalyzing = false, initialUrl = 
                     </button>
                   ))}
                 </div>
-              </div>
+              </div>-->
             </CardContent>
           </Card>
 
